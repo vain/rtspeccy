@@ -1,0 +1,223 @@
+/*
+	Copyright 2011  P. Hofmann
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/*
+	References:
+	http://www.linuxjournal.com/article/6735  (basic recording code)
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <GL/glut.h>
+#include <alsa/asoundlib.h>
+#include <endian.h>
+
+/* Informations about the window, display options. */
+struct interactionInfo
+{
+	int width;
+	int height;
+} interaction;
+
+/* Global sound info. */
+struct soundInfo
+{
+	snd_pcm_t *handle;
+	char *buffer;
+	int bufferCountFrames;
+	snd_pcm_uframes_t frames;
+} sound;
+
+/* Get i'th sample from buffer and convert to short int. */
+short int getFrame(char *buffer, int i)
+{
+	return (buffer[2 * i] & 0xFF)
+		+ ((buffer[2 * i + 1] & 0xFF) << 8);
+}
+
+/* Open and init the default recording device. */
+void audioInit(void)
+{
+	int rc;
+	int size;
+	snd_pcm_hw_params_t *params;
+	unsigned int val;
+	int dir = 0;
+
+	/* Open PCM device for recording (capture). */
+	rc = snd_pcm_open(&sound.handle, "default", SND_PCM_STREAM_CAPTURE, 0);
+	if (rc < 0)
+	{
+		fprintf(stderr, "unable to open pcm device: %s\n", snd_strerror(rc));
+		exit(EXIT_FAILURE);
+	}
+
+	/* Allocate a hardware parameters object. */
+	snd_pcm_hw_params_alloca(&params);
+
+	/* Fill it in with default values. */
+	snd_pcm_hw_params_any(sound.handle, params);
+
+	/* Set the desired hardware parameters. */
+
+	/* Interleaved mode. */
+	snd_pcm_hw_params_set_access(sound.handle, params,
+			SND_PCM_ACCESS_RW_INTERLEAVED);
+
+	/* Signed 16-bit little-endian format. */
+	snd_pcm_hw_params_set_format(sound.handle, params,
+			SND_PCM_FORMAT_S16_LE);
+
+	/* One channel (mono). */
+	snd_pcm_hw_params_set_channels(sound.handle, params, 1);
+
+	/* 44100 bits/second sampling rate (CD quality). */
+	val = 44100;
+	snd_pcm_hw_params_set_rate_near(sound.handle, params, &val, &dir);
+
+	/* Set period size to ("nearly") 32 frames. */
+	sound.frames = 32;
+	snd_pcm_hw_params_set_period_size_near(sound.handle, params,
+			&sound.frames, &dir);
+
+	/* Write the parameters to the driver. */
+	rc = snd_pcm_hw_params(sound.handle, params);
+	if (rc < 0)
+	{
+		fprintf(stderr, "unable to set hw parameters: %s\n",
+				snd_strerror(rc));
+		exit(EXIT_FAILURE);
+	}
+
+	/* Use a buffer large enough to hold one period. */
+	snd_pcm_hw_params_get_period_size(params, &sound.frames, &dir);
+	size = sound.frames * 2;  /* 2 bytes/sample, 1 channel */
+	sound.buffer = (char *)malloc(size);
+}
+
+/* Read one period. */
+void audioRead(void)
+{
+	int rc;
+	rc = snd_pcm_readi(sound.handle, sound.buffer, sound.frames);
+	if (rc == -EPIPE)
+	{
+		/* EPIPE means overrun */
+		fprintf(stderr, "overrun occurred\n");
+		snd_pcm_prepare(sound.handle);
+	}
+	else if (rc < 0)
+	{
+		fprintf(stderr, "error from read: %s\n", snd_strerror(rc));
+	}
+	else if (rc != (int)sound.frames)
+	{
+		fprintf(stderr, "short read, read %d frames\n", rc);
+	}
+	sound.bufferCountFrames = rc;
+}
+
+/* Shutdown audio device. */
+void audioDeinit(void)
+{
+	snd_pcm_drain(sound.handle);
+	snd_pcm_close(sound.handle);
+	free(sound.buffer);
+}
+
+/* Read from audio device and display current buffer. */
+void updateDisplay(void)
+{
+	audioRead();
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	/* Waveform. */
+	int i;
+	glColor3f(1, 0, 0);
+	glBegin(GL_LINE_STRIP);
+	for (i = 0; i < sound.bufferCountFrames; i++)
+	{
+		short int val = getFrame(sound.buffer, i);
+
+		double relX = 2 * ((double)i / sound.bufferCountFrames) - 1;
+		double relY = 2 * (double)val / (256 * 256);
+
+		glVertex2f(relX, relY);
+	}
+	glEnd();
+
+	glutSwapBuffers();
+}
+
+/* Simple orthographic projection. */
+void reshape(int w, int h)
+{
+	double ratio = (double)w / h;
+
+	interaction.width = w;
+	interaction.height = h;
+
+	glClearColor(0, 0, 0, 1);
+	glViewport(0, 0, w, h);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glViewport(0, 0, w, h);
+	glOrtho(-ratio, ratio, -1, 1, -4, 4);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glutPostRedisplay();
+}
+
+/* Keyboard interaction. */
+void keyboard(unsigned char key,
+		int x __attribute__((unused)),
+		int y __attribute__((unused)))
+{
+	switch (key)
+	{
+		case 27:
+			exit(EXIT_SUCCESS);
+	}
+
+	glutPostRedisplay();
+}
+
+int main(int argc, char *argv[])
+{
+	interaction.width = 512;
+	interaction.height = 512;
+
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitWindowSize(interaction.width, interaction.height);
+	glutCreateWindow("vis");
+
+	glutDisplayFunc(updateDisplay);
+	glutReshapeFunc(reshape);
+	glutKeyboardFunc(keyboard);
+	glutIdleFunc(updateDisplay);
+
+	audioInit();
+	glutMainLoop();
+	audioDeinit();
+
+	exit(EXIT_SUCCESS);
+}
