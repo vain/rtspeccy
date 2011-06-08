@@ -51,6 +51,9 @@ struct fftwInfo
 	fftw_complex *out;
 	fftw_plan plan;
 	int outlen;
+	double *history;
+	int historySize;
+	int historyCurrent;
 } fftw;
 
 /* Get i'th sample from buffer and convert to short int. */
@@ -158,6 +161,13 @@ void fftwInit(void)
 	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * fftw.outlen);
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
+
+	fftw.historySize = 128;
+	fftw.historyCurrent = 0;
+	fftw.history = (double *)malloc(sizeof(double) * fftw.historySize
+			* fftw.outlen);
+	memset(fftw.history, 0, sizeof(double) * fftw.historySize
+			* fftw.outlen);
 }
 
 /* Free any FFTW resources. */
@@ -166,29 +176,19 @@ void fftwDeinit(void)
 	fftw_destroy_plan(fftw.plan);
 	fftw_free(fftw.in);
 	fftw_free(fftw.out);
+	free(fftw.history);
 }
 
 /* Read from audio device and display current buffer. */
 void updateDisplay(void)
 {
+	int i;
+
 	audioRead();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Waveform. */
-	int i;
-	glColor3f(1, 0, 0);
-	glBegin(GL_LINE_STRIP);
-	for (i = 0; i < sound.bufferCountFrames; i++)
-	{
-		short int val = getFrame(sound.buffer, i);
-		double relX = 2 * ((double)i / sound.bufferCountFrames) - 1;
-		double relY = (double)val / (256 * 256) - 0.5;
-		glVertex2f(relX, relY);
-	}
-	glEnd();
-
-	/* Spectrum. */
+	/* Calculate spectrum. */
 	for (i = 0; i < sound.bufferCountFrames; i++)
 	{
 		short int val = getFrame(sound.buffer, i);
@@ -200,17 +200,51 @@ void updateDisplay(void)
 	}
 	fftw_execute(fftw.plan);
 
+	/* Add line to history. */
+	for (i = 0; i < fftw.outlen; i++)
+	{
+		double relY = sqrt(fftw.out[i][0] * fftw.out[i][0]
+				+ fftw.out[i][1] * fftw.out[i][1]) / (0.0125 * fftw.outlen);
+		relY = relY > 1.0 ? 1.0 : relY;
+		fftw.history[fftw.historyCurrent * fftw.outlen + i] = relY;
+	}
+
+	/* Show history. */
+	glBegin(GL_POINTS);
+	int h, hReal;
+	for (h = 0; h < fftw.historySize; h++)
+	{
+		hReal = fftw.historyCurrent - h;
+		hReal = hReal < 0 ? hReal + fftw.historySize : hReal;
+		for (i = 0; i < fftw.outlen; i++)
+		{
+			double relX = 2 * ((double)i / fftw.outlen) - 1;
+			double relY = (double)h / fftw.historySize;
+			relY *= 1.5;
+			relY -= 0.5;
+			double val = fftw.history[hReal * fftw.outlen + i];
+			glColor3f(0, val, val);
+			glVertex2f(relX, relY);
+		}
+	}
+	glEnd();
+
+	/* Show current spectrum. */
 	glColor3f(0, 1, 0);
 	glBegin(GL_LINE_STRIP);
 	for (i = 0; i < fftw.outlen; i++)
 	{
 		double relX = 2 * ((double)i / fftw.outlen) - 1;
-		double relY = sqrt(fftw.out[i][0] * fftw.out[i][0]
-				+ fftw.out[i][1] * fftw.out[i][1]) / (0.5 * fftw.outlen);
-		relY = relY > 1.0 ? 1.0 : relY;
+		double relY = fftw.history[fftw.historyCurrent * fftw.outlen + i];
+		relY /= 2;
+		relY -= 1;
 		glVertex2f(relX, relY);
 	}
 	glEnd();
+
+	/* Go to next line in (circular) history. */
+	fftw.historyCurrent++;
+	fftw.historyCurrent %= fftw.historySize;
 
 	glutSwapBuffers();
 }
