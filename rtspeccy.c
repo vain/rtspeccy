@@ -265,6 +265,13 @@ void updateDisplay(void)
 	}
 	glEnd();
 
+	/* Dividing line. */
+	glColor3f(1, 1, 1);
+	glBegin(GL_LINE);
+	glVertex2f(-1, -0.5);
+	glVertex2f( 1, -0.5);
+	glEnd();
+
 	/* Go to next line in (circular) history. */
 	fftw.historyCurrent++;
 	fftw.historyCurrent %= fftw.historySize;
