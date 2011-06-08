@@ -224,7 +224,7 @@ void updateDisplay(void)
 
 	/* Draw history into a texture. */
 	int h, hReal, ta = 0;
-	float histcol[3] = DISPLAY_SPEC_HISTORY_COLOR;
+	double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
 	for (h = 0; h < fftw.historySize; h++)
 	{
 		hReal = fftw.historyCurrent - h;
@@ -232,9 +232,33 @@ void updateDisplay(void)
 		for (i = 0; i < fftw.outlen; i++)
 		{
 			double val = fftw.history[hReal * fftw.outlen + i];
-			fftw.textureData[ta++] = (unsigned char)(histcol[0] * val * 255);
-			fftw.textureData[ta++] = (unsigned char)(histcol[1] * val * 255);
-			fftw.textureData[ta++] = (unsigned char)(histcol[2] * val * 255);
+
+			/* Find first index where "val" is outside that color
+			 * interval. */
+			int colat = 1;
+			while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
+					&& val > histramp[colat][0])
+				colat++;
+
+			colat--;
+
+			/* Scale "val" into this interval. */
+			double span = histramp[colat + 1][0] - histramp[colat][0];
+			val -= histramp[colat][0];
+			val /= span;
+
+			/* Interpolate those two colors linearly. */
+			double colnow[3];
+			colnow[0] = histramp[colat][1] * (1 - val)
+				+ val * histramp[colat + 1][1];
+			colnow[1] = histramp[colat][2] * (1 - val)
+				+ val * histramp[colat + 1][2];
+			colnow[2] = histramp[colat][3] * (1 - val)
+				+ val * histramp[colat + 1][3];
+
+			fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
+			fftw.textureData[ta++] = (unsigned char)(colnow[1] * 255);
+			fftw.textureData[ta++] = (unsigned char)(colnow[2] * 255);
 		}
 	}
 
