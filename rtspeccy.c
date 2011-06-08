@@ -20,6 +20,8 @@
 	http://www.linuxjournal.com/article/6735  (basic recording code)
 */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
@@ -78,7 +80,7 @@ void audioInit(void)
 	int dir = 0;
 
 	/* Open PCM device for recording (capture). */
-	rc = snd_pcm_open(&sound.handle, "default", SND_PCM_STREAM_CAPTURE, 0);
+	rc = snd_pcm_open(&sound.handle, SOUND_DEVICE, SND_PCM_STREAM_CAPTURE, 0);
 	if (rc < 0)
 	{
 		fprintf(stderr, "unable to open pcm device: %s\n", snd_strerror(rc));
@@ -105,7 +107,7 @@ void audioInit(void)
 	snd_pcm_hw_params_set_channels(sound.handle, params, 1);
 
 	/* 44100 bits/second sampling rate (CD quality). */
-	val = 44100;
+	val = SOUND_RATE;
 	snd_pcm_hw_params_set_rate_near(sound.handle, params, &val, &dir);
 
 	/* Set period size to ("nearly") 1024 frames. */
@@ -123,7 +125,7 @@ void audioInit(void)
 	}
 
 	/* Acquire n frames per turn. */
-	sound.frames = 2048;
+	sound.frames = SOUND_SAMPLES_PER_TURN;
 	size = sound.frames * 2;  /* 2 bytes/sample, 1 channel */
 	sound.buffer = (char *)malloc(size);
 }
@@ -167,7 +169,7 @@ void fftwInit(void)
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
 
-	fftw.historySize = 256;
+	fftw.historySize = FFTW_HISTORY_SIZE;
 	fftw.historyCurrent = 0;
 	fftw.history = (double *)malloc(sizeof(double) * fftw.historySize
 			* fftw.outlen);
@@ -215,13 +217,14 @@ void updateDisplay(void)
 	for (i = 0; i < fftw.outlen; i++)
 	{
 		double relY = sqrt(fftw.out[i][0] * fftw.out[i][0]
-				+ fftw.out[i][1] * fftw.out[i][1]) / (0.0125 * fftw.outlen);
+				+ fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
 		relY = relY > 1.0 ? 1.0 : relY;
 		fftw.history[fftw.historyCurrent * fftw.outlen + i] = relY;
 	}
 
 	/* Draw history into a texture. */
 	int h, hReal, ta = 0;
+	float histcol[3] = DISPLAY_SPEC_HISTORY_COLOR;
 	for (h = 0; h < fftw.historySize; h++)
 	{
 		hReal = fftw.historyCurrent - h;
@@ -229,9 +232,9 @@ void updateDisplay(void)
 		for (i = 0; i < fftw.outlen; i++)
 		{
 			double val = fftw.history[hReal * fftw.outlen + i];
-			fftw.textureData[ta++] = 0;
-			fftw.textureData[ta++] = (unsigned char)(val * 255);
-			fftw.textureData[ta++] = (unsigned char)(val * 255);
+			fftw.textureData[ta++] = (unsigned char)(histcol[0] * val * 255);
+			fftw.textureData[ta++] = (unsigned char)(histcol[1] * val * 255);
+			fftw.textureData[ta++] = (unsigned char)(histcol[2] * val * 255);
 		}
 	}
 
@@ -253,7 +256,8 @@ void updateDisplay(void)
 	glDisable(GL_TEXTURE_2D);
 
 	/* Show current spectrum. */
-	glColor3f(0, 1, 0);
+	float curcol[3] = DISPLAY_SPEC_CURRENT_COLOR;
+	glColor3fv(curcol);
 	glBegin(GL_LINE_STRIP);
 	for (i = 0; i < fftw.outlen; i++)
 	{
@@ -312,8 +316,8 @@ void keyboard(unsigned char key,
 
 void displayInit(int argc, char *argv[])
 {
-	interaction.width = 512;
-	interaction.height = 512;
+	interaction.width = DISPLAY_INITIAL_WIDTH;
+	interaction.height = DISPLAY_INITIAL_HEIGHT;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
