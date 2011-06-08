@@ -1,0 +1,21 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define SOUND_DEVICE "default"
+#define SOUND_RATE 44100
+#define SOUND_SAMPLES_PER_TURN 2048
+
+#define FFTW_HISTORY_SIZE 256
+#define FFTW_SCALE (0.0125 * fftw.outlen)
+
+#define DISPLAY_INITIAL_WIDTH 512
+#define DISPLAY_INITIAL_HEIGHT 512
+#define DISPLAY_SPEC_CURRENT_COLOR { 0, 1, 0 }
+#define DISPLAY_SPEC_HISTORY_RAMP_NUM 3
+#define DISPLAY_SPEC_HISTORY_RAMP { \
+	{ 0,     0, 0, 0 }, \
+	{ 0.125, 0, 0, 1 }, \
+	{ 1,     1, 0, 1 }, \
+	}
+
+#endif /* CONFIG_H */
