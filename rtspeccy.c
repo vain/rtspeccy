@@ -29,6 +29,7 @@
 #include <endian.h>
 #include <fftw3.h>
 #include <math.h>
+#include <string.h>
 
 /* Informations about the window, display options. */
 struct interactionInfo
@@ -54,10 +55,7 @@ struct fftwInfo
 	fftw_plan plan;
 	int outlen;
 
-	double *history;
-	int historySize;
-	int historyCurrent;
-
+	double *currentLine;
 	unsigned char *textureData;
 	GLuint textureHandle;
 	int textureWidth, textureHeight;
@@ -169,16 +167,13 @@ void fftwInit(void)
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
 
-	fftw.historySize = FFTW_HISTORY_SIZE;
-	fftw.historyCurrent = 0;
-	fftw.history = (double *)malloc(sizeof(double) * fftw.historySize
-			* fftw.outlen);
-	memset(fftw.history, 0, sizeof(double) * fftw.historySize
-			* fftw.outlen);
+	fftw.currentLine = (double *)malloc(sizeof(double) * fftw.outlen);
 
 	fftw.textureWidth = fftw.outlen;
-	fftw.textureHeight = fftw.historySize;
+	fftw.textureHeight = FFTW_HISTORY_SIZE;
 	fftw.textureData = (unsigned char *)malloc(sizeof(unsigned char)
+			* fftw.textureWidth * fftw.textureHeight * 3);
+	memset(fftw.textureData, 0, sizeof(unsigned char)
 			* fftw.textureWidth * fftw.textureHeight * 3);
 }
 
@@ -188,7 +183,7 @@ void fftwDeinit(void)
 	fftw_destroy_plan(fftw.plan);
 	fftw_free(fftw.in);
 	fftw_free(fftw.out);
-	free(fftw.history);
+	free(fftw.currentLine);
 	free(fftw.textureData);
 }
 
@@ -213,55 +208,51 @@ void updateDisplay(void)
 	}
 	fftw_execute(fftw.plan);
 
-	/* Add line to history. */
+	/* Draw history into a texture. First, move old texture one line up. */
+	memmove(fftw.textureData + (3 * fftw.textureWidth), fftw.textureData,
+			(fftw.textureHeight - 1) * fftw.textureWidth * 3);
+
+	int ha = 0, ta = 0;
+	double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
 	for (i = 0; i < fftw.outlen; i++)
 	{
-		double relY = sqrt(fftw.out[i][0] * fftw.out[i][0]
+		double val = sqrt(fftw.out[i][0] * fftw.out[i][0]
 				+ fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
-		relY = relY > 1.0 ? 1.0 : relY;
-		fftw.history[fftw.historyCurrent * fftw.outlen + i] = relY;
+		val = val > 1.0 ? 1.0 : val;
+
+		/* Save current line for current spectrum. */
+		fftw.currentLine[ha++] = val;
+
+		/* Find first index where "val" is outside that color
+		 * interval. */
+		int colat = 1;
+		while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
+				&& val > histramp[colat][0])
+			colat++;
+
+		colat--;
+
+		/* Scale "val" into this interval. */
+		double span = histramp[colat + 1][0] - histramp[colat][0];
+		val -= histramp[colat][0];
+		val /= span;
+
+		/* Interpolate those two colors linearly. */
+		double colnow[3];
+		colnow[0] = histramp[colat][1] * (1 - val)
+			+ val * histramp[colat + 1][1];
+		colnow[1] = histramp[colat][2] * (1 - val)
+			+ val * histramp[colat + 1][2];
+		colnow[2] = histramp[colat][3] * (1 - val)
+			+ val * histramp[colat + 1][3];
+
+		/* Write this line into new first line of the texture. */
+		fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
+		fftw.textureData[ta++] = (unsigned char)(colnow[1] * 255);
+		fftw.textureData[ta++] = (unsigned char)(colnow[2] * 255);
 	}
 
-	/* Draw history into a texture. */
-	int h, hReal, ta = 0;
-	double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
-	for (h = 0; h < fftw.historySize; h++)
-	{
-		hReal = fftw.historyCurrent - h;
-		hReal = hReal < 0 ? hReal + fftw.historySize : hReal;
-		for (i = 0; i < fftw.outlen; i++)
-		{
-			double val = fftw.history[hReal * fftw.outlen + i];
-
-			/* Find first index where "val" is outside that color
-			 * interval. */
-			int colat = 1;
-			while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
-					&& val > histramp[colat][0])
-				colat++;
-
-			colat--;
-
-			/* Scale "val" into this interval. */
-			double span = histramp[colat + 1][0] - histramp[colat][0];
-			val -= histramp[colat][0];
-			val /= span;
-
-			/* Interpolate those two colors linearly. */
-			double colnow[3];
-			colnow[0] = histramp[colat][1] * (1 - val)
-				+ val * histramp[colat + 1][1];
-			colnow[1] = histramp[colat][2] * (1 - val)
-				+ val * histramp[colat + 1][2];
-			colnow[2] = histramp[colat][3] * (1 - val)
-				+ val * histramp[colat + 1][3];
-
-			fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
-			fftw.textureData[ta++] = (unsigned char)(colnow[1] * 255);
-			fftw.textureData[ta++] = (unsigned char)(colnow[2] * 255);
-		}
-	}
-
+	/* Update texture. */
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
@@ -270,6 +261,7 @@ void updateDisplay(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0);  glVertex2f(-1, -0.5);
@@ -286,7 +278,7 @@ void updateDisplay(void)
 	for (i = 0; i < fftw.outlen; i++)
 	{
 		double relX = 2 * ((double)i / fftw.outlen) - 1;
-		double relY = fftw.history[fftw.historyCurrent * fftw.outlen + i];
+		double relY = fftw.currentLine[i];
 		relY /= 2;
 		relY -= 1;
 		glVertex2f(relX, relY);
@@ -299,10 +291,6 @@ void updateDisplay(void)
 	glVertex2f(-1, -0.5);
 	glVertex2f( 1, -0.5);
 	glEnd();
-
-	/* Go to next line in (circular) history. */
-	fftw.historyCurrent++;
-	fftw.historyCurrent %= fftw.historySize;
 
 	glutSwapBuffers();
 }
