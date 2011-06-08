@@ -107,8 +107,8 @@ void audioInit(void)
 	val = 44100;
 	snd_pcm_hw_params_set_rate_near(sound.handle, params, &val, &dir);
 
-	/* Set period size to ("nearly") 32 frames. */
-	sound.frames = 32;
+	/* Set period size to ("nearly") 1024 frames. */
+	sound.frames = 1024;
 	snd_pcm_hw_params_set_period_size_near(sound.handle, params,
 			&sound.frames, &dir);
 
@@ -239,6 +239,7 @@ void updateDisplay(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0);  glVertex2f(-1, -0.5);
 	glTexCoord2f(1, 0);  glVertex2f( 1, -0.5);
