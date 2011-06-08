@@ -58,6 +58,7 @@ struct fftwInfo
 
 	unsigned char *textureData;
 	GLuint textureHandle;
+	int textureWidth, textureHeight;
 } fftw;
 
 /* Get i'th sample from buffer and convert to short int. */
@@ -166,15 +167,17 @@ void fftwInit(void)
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
 
-	fftw.historySize = 128;
+	fftw.historySize = 256;
 	fftw.historyCurrent = 0;
 	fftw.history = (double *)malloc(sizeof(double) * fftw.historySize
 			* fftw.outlen);
 	memset(fftw.history, 0, sizeof(double) * fftw.historySize
 			* fftw.outlen);
 
+	fftw.textureWidth = fftw.outlen;
+	fftw.textureHeight = fftw.historySize;
 	fftw.textureData = (unsigned char *)malloc(sizeof(unsigned char)
-			* fftw.historySize * fftw.outlen * 3);
+			* fftw.textureWidth * fftw.textureHeight * 3);
 }
 
 /* Free any FFTW resources. */
@@ -234,7 +237,8 @@ void updateDisplay(void)
 
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, fftw.outlen, fftw.historySize, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+			fftw.textureWidth, fftw.textureHeight, 0,
 			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
