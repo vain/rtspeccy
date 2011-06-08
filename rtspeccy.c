@@ -51,9 +51,13 @@ struct fftwInfo
 	fftw_complex *out;
 	fftw_plan plan;
 	int outlen;
+
 	double *history;
 	int historySize;
 	int historyCurrent;
+
+	unsigned char *textureData;
+	GLuint textureHandle;
 } fftw;
 
 /* Get i'th sample from buffer and convert to short int. */
@@ -156,7 +160,7 @@ void audioDeinit(void)
 /* Create FFTW-plan, allocate buffers. */
 void fftwInit(void)
 {
-	fftw.outlen = sound.frames / 2 + 1;
+	fftw.outlen = sound.frames / 2;
 	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.frames);
 	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * fftw.outlen);
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
@@ -168,6 +172,9 @@ void fftwInit(void)
 			* fftw.outlen);
 	memset(fftw.history, 0, sizeof(double) * fftw.historySize
 			* fftw.outlen);
+
+	fftw.textureData = (unsigned char *)malloc(sizeof(unsigned char)
+			* fftw.historySize * fftw.outlen * 3);
 }
 
 /* Free any FFTW resources. */
@@ -177,6 +184,7 @@ void fftwDeinit(void)
 	fftw_free(fftw.in);
 	fftw_free(fftw.out);
 	free(fftw.history);
+	free(fftw.textureData);
 }
 
 /* Read from audio device and display current buffer. */
@@ -209,25 +217,35 @@ void updateDisplay(void)
 		fftw.history[fftw.historyCurrent * fftw.outlen + i] = relY;
 	}
 
-	/* Show history. */
-	glBegin(GL_POINTS);
-	int h, hReal;
+	/* Draw history into a texture. */
+	int h, hReal, ta = 0;
 	for (h = 0; h < fftw.historySize; h++)
 	{
 		hReal = fftw.historyCurrent - h;
 		hReal = hReal < 0 ? hReal + fftw.historySize : hReal;
 		for (i = 0; i < fftw.outlen; i++)
 		{
-			double relX = 2 * ((double)i / fftw.outlen) - 1;
-			double relY = (double)h / fftw.historySize;
-			relY *= 1.5;
-			relY -= 0.5;
 			double val = fftw.history[hReal * fftw.outlen + i];
-			glColor3f(0, val, val);
-			glVertex2f(relX, relY);
+			fftw.textureData[ta++] = 0;
+			fftw.textureData[ta++] = (unsigned char)(val * 255);
+			fftw.textureData[ta++] = (unsigned char)(val * 255);
 		}
 	}
+
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, fftw.outlen, fftw.historySize, 0,
+			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0);  glVertex2f(-1, -0.5);
+	glTexCoord2f(1, 0);  glVertex2f( 1, -0.5);
+	glTexCoord2f(1, 1);  glVertex2f( 1,  1);
+	glTexCoord2f(0, 1);  glVertex2f(-1,  1);
 	glEnd();
+	glDisable(GL_TEXTURE_2D);
 
 	/* Show current spectrum. */
 	glColor3f(0, 1, 0);
@@ -285,7 +303,7 @@ void keyboard(unsigned char key,
 	glutPostRedisplay();
 }
 
-int main(int argc, char *argv[])
+void displayInit(int argc, char *argv[])
 {
 	interaction.width = 512;
 	interaction.height = 512;
@@ -300,6 +318,13 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(updateDisplay);
 
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(1, &fftw.textureHandle);
+}
+
+int main(int argc, char *argv[])
+{
+	displayInit(argc, argv);
 	audioInit();
 	fftwInit();
 	glutMainLoop();
