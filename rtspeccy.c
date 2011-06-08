@@ -122,8 +122,8 @@ void audioInit(void)
 		exit(EXIT_FAILURE);
 	}
 
-	/* Use a buffer large enough to hold one period. */
-	snd_pcm_hw_params_get_period_size(params, &sound.frames, &dir);
+	/* Acquire n frames per turn. */
+	sound.frames = 2048;
 	size = sound.frames * 2;  /* 2 bytes/sample, 1 channel */
 	sound.buffer = (char *)malloc(size);
 }
