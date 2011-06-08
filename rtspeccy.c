@@ -275,18 +275,13 @@ void updateDisplay(void)
 /* Simple orthographic projection. */
 void reshape(int w, int h)
 {
-	double ratio = (double)w / h;
-
 	interaction.width = w;
 	interaction.height = h;
 
-	glClearColor(0, 0, 0, 1);
 	glViewport(0, 0, w, h);
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glViewport(0, 0, w, h);
-	glOrtho(-ratio, ratio, -1, 1, -4, 4);
+	glOrtho(-1, 1, -1, 1, -4, 4);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
