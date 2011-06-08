@@ -25,6 +25,8 @@
 #include <GL/glut.h>
 #include <alsa/asoundlib.h>
 #include <endian.h>
+#include <fftw3.h>
+#include <math.h>
 
 /* Informations about the window, display options. */
 struct interactionInfo
@@ -41,6 +43,15 @@ struct soundInfo
 	int bufferCountFrames;
 	snd_pcm_uframes_t frames;
 } sound;
+
+/* Global fftw info. */
+struct fftwInfo
+{
+	double *in;
+	fftw_complex *out;
+	fftw_plan plan;
+	int outlen;
+} fftw;
 
 /* Get i'th sample from buffer and convert to short int. */
 short int getFrame(char *buffer, int i)
@@ -139,6 +150,24 @@ void audioDeinit(void)
 	free(sound.buffer);
 }
 
+/* Create FFTW-plan, allocate buffers. */
+void fftwInit(void)
+{
+	fftw.outlen = sound.frames / 2 + 1;
+	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.frames);
+	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * fftw.outlen);
+	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
+			FFTW_ESTIMATE);
+}
+
+/* Free any FFTW resources. */
+void fftwDeinit(void)
+{
+	fftw_destroy_plan(fftw.plan);
+	fftw_free(fftw.in);
+	fftw_free(fftw.out);
+}
+
 /* Read from audio device and display current buffer. */
 void updateDisplay(void)
 {
@@ -153,10 +182,32 @@ void updateDisplay(void)
 	for (i = 0; i < sound.bufferCountFrames; i++)
 	{
 		short int val = getFrame(sound.buffer, i);
-
 		double relX = 2 * ((double)i / sound.bufferCountFrames) - 1;
-		double relY = 2 * (double)val / (256 * 256);
+		double relY = (double)val / (256 * 256) - 0.5;
+		glVertex2f(relX, relY);
+	}
+	glEnd();
 
+	/* Spectrum. */
+	for (i = 0; i < sound.bufferCountFrames; i++)
+	{
+		short int val = getFrame(sound.buffer, i);
+		fftw.in[i] = 2 * (double)val / (256 * 256);
+	}
+	for (i = sound.bufferCountFrames; i < (int)sound.frames; i++)
+	{
+		fftw.in[i] = 0;
+	}
+	fftw_execute(fftw.plan);
+
+	glColor3f(0, 1, 0);
+	glBegin(GL_LINE_STRIP);
+	for (i = 0; i < fftw.outlen; i++)
+	{
+		double relX = 2 * ((double)i / fftw.outlen) - 1;
+		double relY = sqrt(fftw.out[i][0] * fftw.out[i][0]
+				+ fftw.out[i][1] * fftw.out[i][1]) / (0.5 * fftw.outlen);
+		relY = relY > 1.0 ? 1.0 : relY;
 		glVertex2f(relX, relY);
 	}
 	glEnd();
@@ -216,8 +267,10 @@ int main(int argc, char *argv[])
 	glutIdleFunc(updateDisplay);
 
 	audioInit();
+	fftwInit();
 	glutMainLoop();
 	audioDeinit();
+	fftwDeinit();
 
 	exit(EXIT_SUCCESS);
 }
