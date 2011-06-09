@@ -38,6 +38,10 @@ struct interactionInfo
 	int height;
 
 	int update;
+
+	int isMouseDown;
+	int lastMouseDownS[2];
+	double lastMouseDownW[3];
 } interaction;
 
 /* Global sound info. */
@@ -335,6 +339,57 @@ void updateDisplay(void)
 	}
 	glEnd();
 
+	/* Current line and overtones. */
+	if (interaction.isMouseDown)
+	{
+		/* Crosshair. */
+		glColor3f(0.7, 0.0, 0.0);
+		glBegin(GL_LINE);
+		glVertex2f(interaction.lastMouseDownW[0], -1);
+		glVertex2f(interaction.lastMouseDownW[0],  1);
+		glEnd();
+
+		glColor3f(0.7, 0.0, 0.0);
+		glBegin(GL_LINE);
+		glVertex2f(-1, interaction.lastMouseDownW[1]);
+		glVertex2f( 1, interaction.lastMouseDownW[1]);
+		glEnd();
+
+		/* Overtones until we hit the right border. Repeat with a larger
+		 * factor until not even a single line with that factor would be
+		 * drawn. */
+		glColor3f(0.7, 0.7, 0.7);
+		double xInitial = interaction.lastMouseDownW[0] + 1;
+		if (interaction.lastMouseDownW[0] > -1)
+		{
+			double factor;
+			for (factor = 2; xInitial * factor - 1 < 1; factor += 1)
+			{
+				double x = xInitial;
+				while (x - 1 < 1)
+				{
+					x *= factor;
+					glBegin(GL_LINE);
+					glVertex2f(x - 1, -1);
+					glVertex2f(x - 1,  1);
+					glEnd();
+				}
+			}
+		}
+
+		/* Undertones until two lines are less than 2 pixels apart. */
+		double x = xInitial;
+		while ((0.5 * x * interaction.width)
+				- (0.25 * x * interaction.width) > 2)
+		{
+			x /= 2;
+			glBegin(GL_LINE);
+			glVertex2f(x - 1, -1);
+			glVertex2f(x - 1,  1);
+			glEnd();
+		}
+	}
+
 	/* Dividing line. */
 	glColor3f(1, 1, 1);
 	glBegin(GL_LINE);
@@ -380,12 +435,57 @@ void keyboard(unsigned char key,
 	}
 }
 
+/* Convert 2D screen coordinates into world coordinates. */
+void worldCoord(int *screen, double *world)
+{
+	world[0] = (double)screen[0] / interaction.width;
+	world[1] = (double)screen[1] / interaction.height;
+
+	world[0] *= 2;
+	world[1] *= 2;
+
+	world[0] -= 1;
+	world[1] -= 1;
+
+	world[1] *= -1;
+
+	world[2] = 0;
+}
+
+/* Mouse clicks. */
+void mouse(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		interaction.isMouseDown = 1;
+		interaction.lastMouseDownS[0] = x;
+		interaction.lastMouseDownS[1] = y;
+		worldCoord(interaction.lastMouseDownS, interaction.lastMouseDownW);
+	}
+	else
+	{
+		interaction.isMouseDown = 0;
+	}
+}
+
+/* Mouse movements/drags. */
+void motion(int x, int y)
+{
+	if (!interaction.isMouseDown)
+		return;
+
+	interaction.lastMouseDownS[0] = x;
+	interaction.lastMouseDownS[1] = y;
+	worldCoord(interaction.lastMouseDownS, interaction.lastMouseDownW);
+}
+
 /* Create the window, set up callbacks and interaction parameters. */
 void displayInit(int argc, char *argv[])
 {
 	interaction.width = DISPLAY_INITIAL_WIDTH;
 	interaction.height = DISPLAY_INITIAL_HEIGHT;
 	interaction.update = 1;
+	interaction.isMouseDown = 0;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -395,6 +495,8 @@ void displayInit(int argc, char *argv[])
 	glutDisplayFunc(updateDisplay);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
 	glutIdleFunc(updateDisplay);
 }
 
