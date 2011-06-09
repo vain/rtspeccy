@@ -255,11 +255,9 @@ void updateDisplay(void)
 	/* Update texture. */
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-			fftw.textureWidth, fftw.textureHeight, 0,
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+			fftw.textureWidth, fftw.textureHeight,
 			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
@@ -340,9 +338,28 @@ void displayInit(int argc, char *argv[])
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(updateDisplay);
+}
 
+/* Create an initial texture (name + data). */
+void textureInit(void)
+{
 	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &fftw.textureHandle);
+	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+			fftw.textureWidth, fftw.textureHeight, 0,
+			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glDisable(GL_TEXTURE_2D);
+}
+
+/* Delete the texture. */
+void textureDeinit(void)
+{
+	glEnable(GL_TEXTURE_2D);
+	glDeleteTextures(1, &fftw.textureHandle);
+	glDisable(GL_TEXTURE_2D);
 }
 
 int main(int argc, char *argv[])
@@ -350,7 +367,9 @@ int main(int argc, char *argv[])
 	displayInit(argc, argv);
 	audioInit();
 	fftwInit();
+	textureInit();
 	glutMainLoop();
+	textureDeinit();
 	audioDeinit();
 	fftwDeinit();
 
