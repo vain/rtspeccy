@@ -61,6 +61,39 @@ struct fftwInfo
 	int textureWidth, textureHeight;
 } fftw;
 
+/* Check for OpenGL errors. */
+void checkError(int line)
+{
+	GLenum err = glGetError();
+	switch (err)
+	{
+		case GL_NO_ERROR:
+			break;
+
+		case GL_INVALID_ENUM:
+			fprintf(stderr, "GL_INVALID_ENUM: %d\n", line);
+			break;
+		case GL_INVALID_VALUE:
+			fprintf(stderr, "GL_INVALID_VALUE: %d\n", line);
+			break;
+		case GL_INVALID_OPERATION:
+			fprintf(stderr, "GL_INVALID_OPERATION: %d\n", line);
+			break;
+		case GL_STACK_OVERFLOW:
+			fprintf(stderr, "GL_STACK_OVERFLOW: %d\n", line);
+			break;
+		case GL_STACK_UNDERFLOW:
+			fprintf(stderr, "GL_STACK_UNDERFLOW: %d\n", line);
+			break;
+		case GL_OUT_OF_MEMORY:
+			fprintf(stderr, "GL_OUT_OF_MEMORY: %d\n", line);
+			break;
+		case GL_TABLE_TOO_LARGE:
+			fprintf(stderr, "GL_TABLE_TOO_LARGE: %d\n", line);
+			break;
+	}
+}
+
 /* Get i'th sample from buffer and convert to short int. */
 short int getFrame(char *buffer, int i)
 {
@@ -258,6 +291,7 @@ void updateDisplay(void)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 			fftw.textureWidth, fftw.textureHeight,
 			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+	checkError(__LINE__);
 
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
@@ -349,8 +383,9 @@ void textureInit(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
 			fftw.textureWidth, fftw.textureHeight, 0,
 			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	checkError(__LINE__);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glDisable(GL_TEXTURE_2D);
 }
 
