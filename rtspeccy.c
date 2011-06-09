@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include <alsa/asoundlib.h>
-#include <endian.h>
 #include <fftw3.h>
 #include <math.h>
 #include <string.h>
