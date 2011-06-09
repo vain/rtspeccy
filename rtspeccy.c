@@ -39,9 +39,16 @@ struct interactionInfo
 
 	int update;
 
-	int isMouseDown;
-	int lastMouseDownS[2];
-	double lastMouseDownW[3];
+	int showOvertones;
+	int doPanning;
+
+	int lastMouseDownBS[2];
+	int lastMouseDownES[2];
+	double lastMouseDownBW[2];
+	double lastMouseDownEW[2];
+
+	double offsetX, lastOffsetX;
+	double scale;
 } interaction;
 
 /* Global sound info. */
@@ -315,6 +322,12 @@ void updateDisplay(void)
 		checkError(__LINE__);
 	}
 
+	/* Apply zoom and panning. */
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glScaled(interaction.scale, 1, 1);
+	glTranslated(interaction.offsetX, 0, 0);
+
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
@@ -340,27 +353,27 @@ void updateDisplay(void)
 	glEnd();
 
 	/* Current line and overtones. */
-	if (interaction.isMouseDown)
+	if (interaction.showOvertones)
 	{
 		/* Crosshair. */
 		glColor3f(0.7, 0.0, 0.0);
 		glBegin(GL_LINE);
-		glVertex2f(interaction.lastMouseDownW[0], -1);
-		glVertex2f(interaction.lastMouseDownW[0],  1);
+		glVertex2f(interaction.lastMouseDownEW[0], -1);
+		glVertex2f(interaction.lastMouseDownEW[0],  1);
 		glEnd();
 
 		glColor3f(0.7, 0.0, 0.0);
 		glBegin(GL_LINE);
-		glVertex2f(-1, interaction.lastMouseDownW[1]);
-		glVertex2f( 1, interaction.lastMouseDownW[1]);
+		glVertex2f(-1, interaction.lastMouseDownEW[1]);
+		glVertex2f( 1, interaction.lastMouseDownEW[1]);
 		glEnd();
 
 		/* Overtones until we hit the right border. Repeat with a larger
 		 * factor until not even a single line with that factor would be
 		 * drawn. */
 		glColor3f(0.7, 0.7, 0.7);
-		double xInitial = interaction.lastMouseDownW[0] + 1;
-		if (interaction.lastMouseDownW[0] > -1)
+		double xInitial = interaction.lastMouseDownEW[0] + 1;
+		if (interaction.lastMouseDownEW[0] > -1)
 		{
 			double factor;
 			for (factor = 2; xInitial * factor - 1 < 1; factor += 1)
@@ -449,34 +462,79 @@ void worldCoord(int *screen, double *world)
 
 	world[1] *= -1;
 
-	world[2] = 0;
+	/* Panning and scaling only on X axis. */
+	world[0] /= interaction.scale;
+	world[0] -= interaction.lastOffsetX;
 }
 
 /* Mouse clicks. */
 void mouse(int button, int state, int x, int y)
 {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	if (state == GLUT_DOWN)
 	{
-		interaction.isMouseDown = 1;
-		interaction.lastMouseDownS[0] = x;
-		interaction.lastMouseDownS[1] = y;
-		worldCoord(interaction.lastMouseDownS, interaction.lastMouseDownW);
+		/* Save mouse positions for panning or overtones. */
+		if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON)
+		{
+			interaction.lastMouseDownBS[0] = x;
+			interaction.lastMouseDownBS[1] = y;
+			worldCoord(interaction.lastMouseDownBS,
+					interaction.lastMouseDownBW);
+			interaction.lastMouseDownEW[0] = interaction.lastMouseDownBW[0];
+			interaction.lastMouseDownEW[1] = interaction.lastMouseDownBW[1];
+		}
+
+		if (button == GLUT_LEFT_BUTTON)
+		{
+			interaction.showOvertones = 1;
+		}
+		else if (button == GLUT_RIGHT_BUTTON)
+		{
+			interaction.doPanning = 1;
+			interaction.lastOffsetX = interaction.offsetX;
+		}
+		else if (button == 4)
+		{
+			interaction.scale *= 1.05;
+		}
+		else if (button == 3)
+		{
+			interaction.scale /= 1.05;
+			if (interaction.scale < 1)
+				interaction.scale = 1;
+		}
 	}
 	else
 	{
-		interaction.isMouseDown = 0;
+		/* Copy new offset if we were panning. */
+		if (interaction.doPanning)
+		{
+			double dx = interaction.lastMouseDownEW[0]
+				- interaction.lastMouseDownBW[0];
+			interaction.offsetX = interaction.lastOffsetX + dx;
+			interaction.lastOffsetX = interaction.offsetX;
+		}
+
+		interaction.showOvertones = 0;
+		interaction.doPanning = 0;
 	}
 }
 
 /* Mouse movements/drags. */
 void motion(int x, int y)
 {
-	if (!interaction.isMouseDown)
+	if (!interaction.showOvertones && !interaction.doPanning)
 		return;
 
-	interaction.lastMouseDownS[0] = x;
-	interaction.lastMouseDownS[1] = y;
-	worldCoord(interaction.lastMouseDownS, interaction.lastMouseDownW);
+	interaction.lastMouseDownES[0] = x;
+	interaction.lastMouseDownES[1] = y;
+	worldCoord(interaction.lastMouseDownES, interaction.lastMouseDownEW);
+
+	if (interaction.doPanning)
+	{
+		double dx = interaction.lastMouseDownEW[0]
+			- interaction.lastMouseDownBW[0];
+		interaction.offsetX = interaction.lastOffsetX + dx;
+	}
 }
 
 /* Create the window, set up callbacks and interaction parameters. */
@@ -485,7 +543,11 @@ void displayInit(int argc, char *argv[])
 	interaction.width = DISPLAY_INITIAL_WIDTH;
 	interaction.height = DISPLAY_INITIAL_HEIGHT;
 	interaction.update = 1;
-	interaction.isMouseDown = 0;
+	interaction.showOvertones = 0;
+	interaction.doPanning = 0;
+	interaction.scale = 1;
+	interaction.offsetX = 0;
+	interaction.lastOffsetX = 0;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
