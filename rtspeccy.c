@@ -36,6 +36,8 @@ struct interactionInfo
 {
 	int width;
 	int height;
+
+	int update;
 } interaction;
 
 /* Global sound info. */
@@ -45,6 +47,8 @@ struct soundInfo
 	char *buffer;
 	int bufferCountFrames;
 	snd_pcm_uframes_t frames;
+
+	int reprepare;
 } sound;
 
 /* Global fftw info. */
@@ -159,11 +163,19 @@ void audioInit(void)
 	sound.frames = SOUND_SAMPLES_PER_TURN;
 	size = sound.frames * 2;  /* 2 bytes/sample, 1 channel */
 	sound.buffer = (char *)malloc(size);
+
+	sound.reprepare = 0;
 }
 
 /* Read one period. */
 void audioRead(void)
 {
+	if (sound.reprepare)
+	{
+		snd_pcm_prepare(sound.handle);
+		sound.reprepare = 0;
+	}
+
 	int rc;
 	rc = snd_pcm_readi(sound.handle, sound.buffer, sound.frames);
 	if (rc == -EPIPE)
@@ -223,6 +235,9 @@ void fftwDeinit(void)
 /* Read from audio device and display current buffer. */
 void updateDisplay(void)
 {
+	if (!interaction.update)
+		return;
+
 	int i;
 
 	audioRead();
@@ -353,15 +368,20 @@ void keyboard(unsigned char key,
 	{
 		case 27:
 			exit(EXIT_SUCCESS);
-	}
 
-	glutPostRedisplay();
+		case ' ':
+			interaction.update = !interaction.update;
+			sound.reprepare = 1;
+			glutPostRedisplay();
+			break;
+	}
 }
 
 void displayInit(int argc, char *argv[])
 {
 	interaction.width = DISPLAY_INITIAL_WIDTH;
 	interaction.height = DISPLAY_INITIAL_HEIGHT;
+	interaction.update = 1;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
