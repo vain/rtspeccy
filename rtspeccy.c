@@ -497,13 +497,13 @@ void mouse(int button, int state, int x, int y)
 			interaction.doPanning = 1;
 			interaction.lastOffsetX = interaction.offsetX;
 		}
-		else if (button == 4)
+		else if (button == INTERACTION_ZOOM_IN)
 		{
-			interaction.scaleX *= 1.05;
+			interaction.scaleX *= INTERACTION_ZOOM_SPEED;
 		}
-		else if (button == 3)
+		else if (button == INTERACTION_ZOOM_OUT)
 		{
-			interaction.scaleX /= 1.05;
+			interaction.scaleX /= INTERACTION_ZOOM_SPEED;
 			if (interaction.scaleX < 1)
 				interaction.scaleX = 1;
 		}

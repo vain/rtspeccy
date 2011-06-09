@@ -1,21 +1,47 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* Default recording device, sample rate. Sound is always recorded in
+ * mono. */
 #define SOUND_DEVICE "default"
 #define SOUND_RATE 44100
+
+/* A higher value means more samples per visible frame (on the screen).
+ * However, this also reduces your frame rate. */
 #define SOUND_SAMPLES_PER_TURN 2048
 
+/* Number of lines in the spectrogram history (upper half of the screen). */
 #define FFTW_HISTORY_SIZE 256
+
+/* The fourier transformation produced by libfftw3 is not normalized.
+ * Hence, you need to provide a scaling factor. This is a sane default.
+ * Reduce this if you see too much noise. */
 #define FFTW_SCALE (0.0125 * fftw.outlen)
 
+/* Initial size of the window. */
 #define DISPLAY_INITIAL_WIDTH 512
 #define DISPLAY_INITIAL_HEIGHT 512
+
+/* Color of the "current" spectrogram (bottom of the screen). */
 #define DISPLAY_SPEC_CURRENT_COLOR { 0, 1, 0 }
+
 #define DISPLAY_SPEC_HISTORY_RAMP_NUM 3
+/* 2D array: { pos, red, green, blue }. That is, the value 0.1 will get
+ * a color between { 0, 0, 0 } and { 0, 0, 1 } because it's less than
+ * 0.125 (the "pos" value of the second entry. Whereas a value of 0.8
+ * will get a color between { 0, 0, 1 } and { 1, 0, 1 }. Colors are
+ * interpolated linearly. */
 #define DISPLAY_SPEC_HISTORY_RAMP { \
 	{ 0,     0, 0, 0 }, \
 	{ 0.125, 0, 0, 1 }, \
 	{ 1,     1, 0, 1 }, \
 	}
 
+/* Zooming. */
+#define INTERACTION_ZOOM_SPEED 1.05
+#define INTERACTION_ZOOM_IN 4        /* Usually mouse wheel down */
+#define INTERACTION_ZOOM_OUT 3       /* Usually mouse wheel up */
+
 #endif /* CONFIG_H */
+
+/* vim: set ft=cpp : */
