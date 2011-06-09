@@ -235,78 +235,81 @@ void fftwDeinit(void)
 /* Read from audio device and display current buffer. */
 void updateDisplay(void)
 {
-	if (!interaction.update)
-		return;
-
 	int i;
-
-	audioRead();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Calculate spectrum. */
-	for (i = 0; i < sound.bufferCountFrames; i++)
+	if (interaction.update)
 	{
-		short int val = getFrame(sound.buffer, i);
-		fftw.in[i] = 2 * (double)val / (256 * 256);
-	}
-	for (i = sound.bufferCountFrames; i < (int)sound.frames; i++)
-	{
-		fftw.in[i] = 0;
-	}
-	fftw_execute(fftw.plan);
+		audioRead();
 
-	/* Draw history into a texture. First, move old texture one line up. */
-	memmove(fftw.textureData + (3 * fftw.textureWidth), fftw.textureData,
-			(fftw.textureHeight - 1) * fftw.textureWidth * 3);
+		/* Calculate spectrum. */
+		for (i = 0; i < sound.bufferCountFrames; i++)
+		{
+			short int val = getFrame(sound.buffer, i);
+			fftw.in[i] = 2 * (double)val / (256 * 256);
+		}
+		for (i = sound.bufferCountFrames; i < (int)sound.frames; i++)
+		{
+			fftw.in[i] = 0;
+		}
+		fftw_execute(fftw.plan);
 
-	int ha = 0, ta = 0;
-	double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
-	for (i = 0; i < fftw.outlen; i++)
-	{
-		double val = sqrt(fftw.out[i][0] * fftw.out[i][0]
-				+ fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
-		val = val > 1.0 ? 1.0 : val;
+		/* Draw history into a texture. First, move old texture one line up. */
+		memmove(fftw.textureData + (3 * fftw.textureWidth), fftw.textureData,
+				(fftw.textureHeight - 1) * fftw.textureWidth * 3);
 
-		/* Save current line for current spectrum. */
-		fftw.currentLine[ha++] = val;
+		int ha = 0, ta = 0;
+		double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
+		for (i = 0; i < fftw.outlen; i++)
+		{
+			double val = sqrt(fftw.out[i][0] * fftw.out[i][0]
+					+ fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
+			val = val > 1.0 ? 1.0 : val;
 
-		/* Find first index where "val" is outside that color
-		 * interval. */
-		int colat = 1;
-		while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
-				&& val > histramp[colat][0])
-			colat++;
+			/* Save current line for current spectrum. */
+			fftw.currentLine[ha++] = val;
 
-		colat--;
+			/* Find first index where "val" is outside that color
+			 * interval. */
+			int colat = 1;
+			while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
+					&& val > histramp[colat][0])
+				colat++;
 
-		/* Scale "val" into this interval. */
-		double span = histramp[colat + 1][0] - histramp[colat][0];
-		val -= histramp[colat][0];
-		val /= span;
+			colat--;
 
-		/* Interpolate those two colors linearly. */
-		double colnow[3];
-		colnow[0] = histramp[colat][1] * (1 - val)
-			+ val * histramp[colat + 1][1];
-		colnow[1] = histramp[colat][2] * (1 - val)
-			+ val * histramp[colat + 1][2];
-		colnow[2] = histramp[colat][3] * (1 - val)
-			+ val * histramp[colat + 1][3];
+			/* Scale "val" into this interval. */
+			double span = histramp[colat + 1][0] - histramp[colat][0];
+			val -= histramp[colat][0];
+			val /= span;
 
-		/* Write this line into new first line of the texture. */
-		fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
-		fftw.textureData[ta++] = (unsigned char)(colnow[1] * 255);
-		fftw.textureData[ta++] = (unsigned char)(colnow[2] * 255);
+			/* Interpolate those two colors linearly. */
+			double colnow[3];
+			colnow[0] = histramp[colat][1] * (1 - val)
+				+ val * histramp[colat + 1][1];
+			colnow[1] = histramp[colat][2] * (1 - val)
+				+ val * histramp[colat + 1][2];
+			colnow[2] = histramp[colat][3] * (1 - val)
+				+ val * histramp[colat + 1][3];
+
+			/* Write this line into new first line of the texture. */
+			fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
+			fftw.textureData[ta++] = (unsigned char)(colnow[1] * 255);
+			fftw.textureData[ta++] = (unsigned char)(colnow[2] * 255);
+		}
 	}
 
 	/* Update texture. */
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-			fftw.textureWidth, fftw.textureHeight,
-			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
-	checkError(__LINE__);
+	if (interaction.update)
+	{
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+				fftw.textureWidth, fftw.textureHeight,
+				GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+		checkError(__LINE__);
+	}
 
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
