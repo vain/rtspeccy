@@ -48,7 +48,7 @@ struct interactionInfo
 	double lastMouseDownEW[2];
 
 	double offsetX, lastOffsetX;
-	double scale;
+	double scaleX;
 } interaction;
 
 /* Global sound info. */
@@ -325,7 +325,7 @@ void updateDisplay(void)
 	/* Apply zoom and panning. */
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glScaled(interaction.scale, 1, 1);
+	glScaled(interaction.scaleX, 1, 1);
 	glTranslated(interaction.offsetX, 0, 0);
 
 	/* Draw a textured quad. */
@@ -392,8 +392,8 @@ void updateDisplay(void)
 
 		/* Undertones until two lines are less than 2 pixels apart. */
 		double x = xInitial;
-		while ((0.5 * x * interaction.width * interaction.scale)
-				- (0.25 * x * interaction.width * interaction.scale) > 2)
+		while ((0.5 * x * interaction.width * interaction.scaleX)
+				- (0.25 * x * interaction.width * interaction.scaleX) > 2)
 		{
 			x /= 2;
 			glBegin(GL_LINE);
@@ -443,7 +443,12 @@ void keyboard(unsigned char key,
 		case ' ':
 			interaction.update = !interaction.update;
 			sound.reprepare = 1;
-			glutPostRedisplay();
+			break;
+
+		case 'r':
+			interaction.offsetX = 0;
+			interaction.lastOffsetX = 0;
+			interaction.scaleX = 1;
 			break;
 	}
 }
@@ -463,7 +468,7 @@ void worldCoord(int *screen, double *world)
 	world[1] *= -1;
 
 	/* Panning and scaling only on X axis. */
-	world[0] /= interaction.scale;
+	world[0] /= interaction.scaleX;
 	world[0] -= interaction.lastOffsetX;
 }
 
@@ -494,13 +499,13 @@ void mouse(int button, int state, int x, int y)
 		}
 		else if (button == 4)
 		{
-			interaction.scale *= 1.05;
+			interaction.scaleX *= 1.05;
 		}
 		else if (button == 3)
 		{
-			interaction.scale /= 1.05;
-			if (interaction.scale < 1)
-				interaction.scale = 1;
+			interaction.scaleX /= 1.05;
+			if (interaction.scaleX < 1)
+				interaction.scaleX = 1;
 		}
 	}
 	else
@@ -545,7 +550,7 @@ void displayInit(int argc, char *argv[])
 	interaction.update = 1;
 	interaction.showOvertones = 0;
 	interaction.doPanning = 0;
-	interaction.scale = 1;
+	interaction.scaleX = 1;
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
 
