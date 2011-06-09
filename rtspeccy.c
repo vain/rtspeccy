@@ -377,6 +377,7 @@ void keyboard(unsigned char key,
 	}
 }
 
+/* Create the window, set up callbacks and interaction parameters. */
 void displayInit(int argc, char *argv[])
 {
 	interaction.width = DISPLAY_INITIAL_WIDTH;
@@ -386,7 +387,7 @@ void displayInit(int argc, char *argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(interaction.width, interaction.height);
-	glutCreateWindow("vis");
+	glutCreateWindow("rtspeccy");
 
 	glutDisplayFunc(updateDisplay);
 	glutReshapeFunc(reshape);
