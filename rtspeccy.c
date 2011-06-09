@@ -368,25 +368,20 @@ void updateDisplay(void)
 		glVertex2f( 1, interaction.lastMouseDownEW[1]);
 		glEnd();
 
-		/* Overtones until we hit the right border. Repeat with a larger
-		 * factor until not even a single line with that factor would be
-		 * drawn (... this draws unneccssary lines when zoomed in). */
+		/* Indicate overtones at all multiples of the current frequency
+		 * (... this draws unneccssary lines when zoomed in). */
 		glColor3f(0.7, 0.7, 0.7);
 		double xInitial = interaction.lastMouseDownEW[0] + 1;
 		if (interaction.lastMouseDownEW[0] > -1)
 		{
-			double factor;
-			for (factor = 2; xInitial * factor - 1 < 1; factor += 1)
+			double x = xInitial * 2;
+			while (x - 1 < 1)
 			{
-				double x = xInitial;
-				while (x - 1 < 1)
-				{
-					x *= factor;
-					glBegin(GL_LINE);
-					glVertex2f(x - 1, -1);
-					glVertex2f(x - 1,  1);
-					glEnd();
-				}
+				glBegin(GL_LINE);
+				glVertex2f(x - 1, -1);
+				glVertex2f(x - 1,  1);
+				glEnd();
+				x += xInitial;
 			}
 		}
 
