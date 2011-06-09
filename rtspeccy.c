@@ -370,7 +370,7 @@ void updateDisplay(void)
 
 		/* Overtones until we hit the right border. Repeat with a larger
 		 * factor until not even a single line with that factor would be
-		 * drawn. */
+		 * drawn (... this draws unneccssary lines when zoomed in). */
 		glColor3f(0.7, 0.7, 0.7);
 		double xInitial = interaction.lastMouseDownEW[0] + 1;
 		if (interaction.lastMouseDownEW[0] > -1)
@@ -392,8 +392,8 @@ void updateDisplay(void)
 
 		/* Undertones until two lines are less than 2 pixels apart. */
 		double x = xInitial;
-		while ((0.5 * x * interaction.width)
-				- (0.25 * x * interaction.width) > 2)
+		while ((0.5 * x * interaction.width * interaction.scale)
+				- (0.25 * x * interaction.width * interaction.scale) > 2)
 		{
 			x /= 2;
 			glBegin(GL_LINE);
