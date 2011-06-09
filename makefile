@@ -1,4 +1,4 @@
-CFLAGS += -Wall -Wextra -flto -msse3 -mfpmath=sse -O3
+CFLAGS += -Wall -Wextra
 LDLIBS += -lm -lglut -lGL -lasound -lfftw3
 
 rtspeccy: rtspeccy.c
