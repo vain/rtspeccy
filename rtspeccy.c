@@ -179,7 +179,7 @@ void audioInit(void)
 }
 
 /* Read one period. */
-void audioRead(void)
+int audioRead(void)
 {
 	if (sound.reprepare)
 	{
@@ -204,6 +204,8 @@ void audioRead(void)
 		fprintf(stderr, "short read, read %d frames\n", rc);
 	}
 	sound.bufferCountFrames = rc;
+
+	return rc;
 }
 
 /* Shutdown audio device. */
@@ -254,7 +256,8 @@ void updateDisplay(void)
 
 	if (interaction.update)
 	{
-		audioRead();
+		/* Read again if it failed. */
+		while (audioRead() < 0);
 
 		/* Calculate spectrum. */
 		for (i = 0; i < sound.bufferCountFrames; i++)
