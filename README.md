@@ -39,6 +39,7 @@ Controls
 
  * Space bar: Freeze.
  * `r`: Reset view (zooming, panning).
+ * `o`: Force overview, i.e. temporarily disable zooming and panning.
  * Mouse wheel: Zoom along the X axis.
  * Right mouse drag: Pan along the X axis.
  * Left mouse: Show overtone guidelines.

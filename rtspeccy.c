@@ -40,6 +40,7 @@ struct interactionInfo
 
 	int showOvertones;
 	int doPanning;
+	int forceOverview;
 
 	int lastMouseDownBS[2];
 	int lastMouseDownES[2];
@@ -324,8 +325,11 @@ void updateDisplay(void)
 	/* Apply zoom and panning. */
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glScaled(interaction.scaleX, 1, 1);
-	glTranslated(interaction.offsetX, 0, 0);
+	if (!interaction.forceOverview)
+	{
+		glScaled(interaction.scaleX, 1, 1);
+		glTranslated(interaction.offsetX, 0, 0);
+	}
 
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
@@ -386,8 +390,9 @@ void updateDisplay(void)
 
 		/* Undertones until two lines are less than 2 pixels apart. */
 		double x = xInitial;
-		while ((0.5 * x * interaction.width * interaction.scaleX)
-				- (0.25 * x * interaction.width * interaction.scaleX) > 2)
+		double nowscale = interaction.forceOverview ? 1 : interaction.scaleX;
+		while ((0.5 * x * interaction.width * nowscale)
+				- (0.25 * x * interaction.width * nowscale) > 2)
 		{
 			x /= 2;
 			glBegin(GL_LINE);
@@ -444,6 +449,10 @@ void keyboard(unsigned char key,
 			interaction.lastOffsetX = 0;
 			interaction.scaleX = 1;
 			break;
+
+		case 'o':
+			interaction.forceOverview = !interaction.forceOverview;
+			break;
 	}
 }
 
@@ -462,8 +471,11 @@ void worldCoord(int *screen, double *world)
 	world[1] *= -1;
 
 	/* Panning and scaling only on X axis. */
-	world[0] /= interaction.scaleX;
-	world[0] -= interaction.lastOffsetX;
+	if (!interaction.forceOverview)
+	{
+		world[0] /= interaction.scaleX;
+		world[0] -= interaction.lastOffsetX;
+	}
 }
 
 /* Mouse clicks. */
@@ -486,7 +498,7 @@ void mouse(int button, int state, int x, int y)
 		{
 			interaction.showOvertones = 1;
 		}
-		else if (button == GLUT_RIGHT_BUTTON)
+		else if (button == GLUT_RIGHT_BUTTON && !interaction.forceOverview)
 		{
 			interaction.doPanning = 1;
 			interaction.lastOffsetX = interaction.offsetX;
@@ -544,6 +556,7 @@ void displayInit(int argc, char *argv[])
 	interaction.update = 1;
 	interaction.showOvertones = 0;
 	interaction.doPanning = 0;
+	interaction.forceOverview = 0;
 	interaction.scaleX = 1;
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
