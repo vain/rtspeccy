@@ -453,6 +453,18 @@ void keyboard(unsigned char key,
 		case 'o':
 			interaction.forceOverview = !interaction.forceOverview;
 			break;
+
+		case 'h':
+			interaction.offsetX = 0.5;
+			interaction.lastOffsetX = interaction.offsetX;
+			interaction.scaleX = 2;
+			break;
+
+		case 'l':
+			interaction.offsetX = -0.5;
+			interaction.lastOffsetX = interaction.offsetX;
+			interaction.scaleX = 2;
+			break;
 	}
 }
 
