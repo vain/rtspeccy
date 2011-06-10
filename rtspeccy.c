@@ -377,11 +377,13 @@ void updateDisplay(void)
 		glVertex2f( 1, interaction.lastMouseDownEW[1]);
 
 		/* Indicate overtones at all multiples of the current frequency
-		 * (... this draws unneccssary lines when zoomed in). */
+		 * (... this draws unneccssary lines when zoomed in). Don't draw
+		 * these lines if they're less than 5 pixels apart. */
 		float colover[3] = DISPLAY_LINECOLOR_OVERTONES;
 		glColor3fv(colover);
+		double nowscale = interaction.forceOverview ? 1 : interaction.scaleX;
 		double xInitial = interaction.lastMouseDownEW[0] + 1;
-		if (interaction.lastMouseDownEW[0] > -1)
+		if (xInitial * interaction.width * nowscale > 5)
 		{
 			double x = xInitial * 2;
 			while (x - 1 < 1)
@@ -394,7 +396,6 @@ void updateDisplay(void)
 
 		/* Undertones until two lines are less than 2 pixels apart. */
 		double x = xInitial;
-		double nowscale = interaction.forceOverview ? 1 : interaction.scaleX;
 		while ((0.5 * x * interaction.width * nowscale)
 				- (0.25 * x * interaction.width * nowscale) > 2)
 		{
