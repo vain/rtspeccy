@@ -471,6 +471,7 @@ void keyboard(unsigned char key,
 			sound.reprepare = 1;
 			break;
 
+		case 'u':
 		case 'r':
 			interaction.offsetX = 0;
 			interaction.lastOffsetX = 0;

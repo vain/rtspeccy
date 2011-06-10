@@ -38,7 +38,7 @@ Controls
 --------
 
  * Space bar: Freeze.
- * `r`: Reset view (zooming, panning).
+ * `r` or `u`: Reset view (zooming, panning).
  * `o`: Force overview, i.e. temporarily disable zooming and panning.
  * `h`: Pan screen a quarter to the left.
  * `l`: Pan screen a quarter to the right.
