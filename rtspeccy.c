@@ -357,7 +357,7 @@ void updateDisplay(void)
 	}
 	glEnd();
 
-	/* Current line and overtones. */
+	/* Current line and overtones? */
 	if (interaction.showOvertones)
 	{
 		/* Crosshair. */
@@ -405,8 +405,30 @@ void updateDisplay(void)
 			glEnd();
 		}
 	}
+	else
+	{
+		/* Show "main grid" otherwise. */
+		float colgrid1[3] = DISPLAY_LINECOLOR_GRID_1;
+		glColor3fv(colgrid1);
+		glBegin(GL_LINE);
+		glVertex2f(0, -1);
+		glVertex2f(0, 1);
+		glEnd();
 
-	/* Dividing line. */
+		float colgrid2[3] = DISPLAY_LINECOLOR_GRID_2;
+		glColor3fv(colgrid2);
+		glBegin(GL_LINE);
+		glVertex2f(0.5, -1);
+		glVertex2f(0.5, 1);
+		glEnd();
+
+		glBegin(GL_LINE);
+		glVertex2f(-0.5, -1);
+		glVertex2f(-0.5, 1);
+		glEnd();
+	}
+
+	/* Separator between current spectrum and history. */
 	float coldividing[3] = DISPLAY_LINECOLOR_SEPARATOR;
 	glColor3fv(coldividing);
 	glBegin(GL_LINE);
