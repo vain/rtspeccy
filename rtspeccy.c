@@ -428,12 +428,18 @@ void updateDisplay(void)
 		glEnd();
 	}
 
-	/* Separator between current spectrum and history. */
-	float coldividing[3] = DISPLAY_LINECOLOR_SEPARATOR;
-	glColor3fv(coldividing);
-	glBegin(GL_LINE);
+	/* Separator between current spectrum and history; border. */
+	float colborder[3] = DISPLAY_LINECOLOR_BORDER;
+	glColor3fv(colborder);
+	glBegin(GL_LINES);
 	glVertex2f(-1, -0.5);
 	glVertex2f( 1, -0.5);
+
+	glVertex2f(-1, -1);
+	glVertex2f(-1,  1);
+
+	glVertex2f( 1, -1);
+	glVertex2f( 1,  1);
 	glEnd();
 
 	glutSwapBuffers();
