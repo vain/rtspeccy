@@ -40,8 +40,10 @@ Controls
  * Space bar: Freeze.
  * `r`: Reset view (zooming, panning).
  * `o`: Force overview, i.e. temporarily disable zooming and panning.
- * `h`: Jump to lower half of the spectrum.
- * `l`: Jump to upper half of the spectrum.
+ * `h`: Pan screen a quarter to the left.
+ * `l`: Pan screen a quarter to the right.
+ * `j`: Multiply zoom factor by 2.
+ * `k`: Divide zoom factor by 2.
  * Mouse wheel: Zoom along the X axis.
  * Right mouse drag: Pan along the X axis.
  * Left mouse: Show overtone guidelines.

@@ -459,16 +459,22 @@ void keyboard(unsigned char key,
 			interaction.forceOverview = !interaction.forceOverview;
 			break;
 
+		case 'j':
+			interaction.scaleX *= 2;
+			break;
+
+		case 'k':
+			interaction.scaleX /= 2;
+			break;
+
 		case 'h':
-			interaction.offsetX = 0.5;
+			interaction.offsetX += 0.5 / interaction.scaleX;
 			interaction.lastOffsetX = interaction.offsetX;
-			interaction.scaleX = 2;
 			break;
 
 		case 'l':
-			interaction.offsetX = -0.5;
+			interaction.offsetX -= 0.5 / interaction.scaleX;
 			interaction.lastOffsetX = interaction.offsetX;
-			interaction.scaleX = 2;
 			break;
 	}
 }
