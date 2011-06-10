@@ -357,22 +357,21 @@ void updateDisplay(void)
 	}
 	glEnd();
 
+	/* Everything from now on will be line segments. */
+	glBegin(GL_LINES);
+
 	/* Current line and overtones? */
 	if (interaction.showOvertones)
 	{
 		/* Crosshair. */
 		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
 		glColor3fv(colcross);
-		glBegin(GL_LINE);
 		glVertex2f(interaction.lastMouseDownEW[0], -1);
 		glVertex2f(interaction.lastMouseDownEW[0],  1);
-		glEnd();
 
 		glColor3fv(colcross);
-		glBegin(GL_LINE);
 		glVertex2f(-1, interaction.lastMouseDownEW[1]);
 		glVertex2f( 1, interaction.lastMouseDownEW[1]);
-		glEnd();
 
 		/* Indicate overtones at all multiples of the current frequency
 		 * (... this draws unneccssary lines when zoomed in). */
@@ -384,10 +383,8 @@ void updateDisplay(void)
 			double x = xInitial * 2;
 			while (x - 1 < 1)
 			{
-				glBegin(GL_LINE);
 				glVertex2f(x - 1, -1);
 				glVertex2f(x - 1,  1);
-				glEnd();
 				x += xInitial;
 			}
 		}
@@ -399,10 +396,8 @@ void updateDisplay(void)
 				- (0.25 * x * interaction.width * nowscale) > 2)
 		{
 			x /= 2;
-			glBegin(GL_LINE);
 			glVertex2f(x - 1, -1);
 			glVertex2f(x - 1,  1);
-			glEnd();
 		}
 	}
 	else
@@ -410,28 +405,21 @@ void updateDisplay(void)
 		/* Show "main grid" otherwise. */
 		float colgrid1[3] = DISPLAY_LINECOLOR_GRID_1;
 		glColor3fv(colgrid1);
-		glBegin(GL_LINE);
 		glVertex2f(0, -1);
 		glVertex2f(0, 1);
-		glEnd();
 
 		float colgrid2[3] = DISPLAY_LINECOLOR_GRID_2;
 		glColor3fv(colgrid2);
-		glBegin(GL_LINE);
 		glVertex2f(0.5, -1);
 		glVertex2f(0.5, 1);
-		glEnd();
 
-		glBegin(GL_LINE);
 		glVertex2f(-0.5, -1);
 		glVertex2f(-0.5, 1);
-		glEnd();
 	}
 
 	/* Separator between current spectrum and history; border. */
 	float colborder[3] = DISPLAY_LINECOLOR_BORDER;
 	glColor3fv(colborder);
-	glBegin(GL_LINES);
 	glVertex2f(-1, -0.5);
 	glVertex2f( 1, -0.5);
 
@@ -440,6 +428,8 @@ void updateDisplay(void)
 
 	glVertex2f( 1, -1);
 	glVertex2f( 1,  1);
+
+	/* End of line segments. */
 	glEnd();
 
 	glutSwapBuffers();
