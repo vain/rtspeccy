@@ -248,6 +248,8 @@ void updateDisplay(void)
 {
 	int i;
 
+	float bgcolor[3] = DISPLAY_BACKGROUND_COLOR;
+	glClearColor(bgcolor[0], bgcolor[1], bgcolor[2], 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (interaction.update)
@@ -359,13 +361,14 @@ void updateDisplay(void)
 	if (interaction.showOvertones)
 	{
 		/* Crosshair. */
-		glColor3f(0.7, 0.0, 0.0);
+		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
+		glColor3fv(colcross);
 		glBegin(GL_LINE);
 		glVertex2f(interaction.lastMouseDownEW[0], -1);
 		glVertex2f(interaction.lastMouseDownEW[0],  1);
 		glEnd();
 
-		glColor3f(0.7, 0.0, 0.0);
+		glColor3fv(colcross);
 		glBegin(GL_LINE);
 		glVertex2f(-1, interaction.lastMouseDownEW[1]);
 		glVertex2f( 1, interaction.lastMouseDownEW[1]);
@@ -373,7 +376,8 @@ void updateDisplay(void)
 
 		/* Indicate overtones at all multiples of the current frequency
 		 * (... this draws unneccssary lines when zoomed in). */
-		glColor3f(0.7, 0.7, 0.7);
+		float colover[3] = DISPLAY_LINECOLOR_OVERTONES;
+		glColor3fv(colover);
 		double xInitial = interaction.lastMouseDownEW[0] + 1;
 		if (interaction.lastMouseDownEW[0] > -1)
 		{
@@ -403,7 +407,8 @@ void updateDisplay(void)
 	}
 
 	/* Dividing line. */
-	glColor3f(1, 1, 1);
+	float coldividing[3] = DISPLAY_LINECOLOR_SEPARATOR;
+	glColor3fv(coldividing);
 	glBegin(GL_LINE);
 	glVertex2f(-1, -0.5);
 	glVertex2f( 1, -0.5);

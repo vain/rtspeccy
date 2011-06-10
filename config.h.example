@@ -22,6 +22,10 @@
 #define DISPLAY_INITIAL_WIDTH 512
 #define DISPLAY_INITIAL_HEIGHT 512
 
+/* Background color. Applies to the background of the "current"
+ * spectrogram as well as any "exterior" areas. */
+#define DISPLAY_BACKGROUND_COLOR { 0, 0, 0 }
+
 /* Color of the "current" spectrogram (bottom of the screen). */
 #define DISPLAY_SPEC_CURRENT_COLOR { 0, 1, 0 }
 
@@ -36,6 +40,11 @@
 	{ 0.125, 0, 0, 1 }, \
 	{ 1,     1, 0, 1 }, \
 	}
+
+/* Line colors. */
+#define DISPLAY_LINECOLOR_CROSS { 0.7, 0, 0 }
+#define DISPLAY_LINECOLOR_OVERTONES { 0.7, 0.7, 0.7 }
+#define DISPLAY_LINECOLOR_SEPARATOR { 1, 1, 1 }
 
 /* Zooming. */
 #define INTERACTION_ZOOM_SPEED 1.05
