@@ -499,6 +499,12 @@ void keyboard(unsigned char key,
 			interaction.offsetX -= 0.5 / interaction.scaleX;
 			interaction.lastOffsetX = interaction.offsetX;
 			break;
+
+		case 'H':
+			interaction.scaleX = 4;
+			interaction.offsetX = 0.75;
+			interaction.lastOffsetX = interaction.offsetX;
+			break;
 	}
 }
 

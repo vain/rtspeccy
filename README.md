@@ -44,6 +44,9 @@ Controls
  * `l`: Pan screen a quarter to the right.
  * `j`: Multiply zoom factor by 2.
  * `k`: Divide zoom factor by 2.
+ * Most of the interesting stuff happens in the first quarter of the
+   spectrogram, `H` focuses that region (short for `j`, `h`, `h`, `j`,
+   `h`, `h`).
  * Mouse wheel: Zoom along the X axis.
  * Right mouse drag: Pan along the X axis.
  * Left mouse: Show overtone guidelines.
