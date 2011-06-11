@@ -6,8 +6,9 @@
 #define SOUND_DEVICE "default"
 #define SOUND_RATE 44100
 
-/* A higher value means more samples per visible frame (on the screen).
- * However, this also reduces your frame rate. */
+/* A higher value means larger latency and more memory consumption. On
+ * the other hand, a higher value also results in a higher resolution of
+ * the spectrogram. */
 #define SOUND_SAMPLES_PER_TURN 2048
 
 /* Number of lines in the spectrogram history (upper half of the screen). */

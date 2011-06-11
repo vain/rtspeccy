@@ -55,9 +55,11 @@ struct interactionInfo
 struct soundInfo
 {
 	snd_pcm_t *handle;
+
 	char *buffer;
-	int bufferCountFrames;
-	snd_pcm_uframes_t frames;
+	snd_pcm_uframes_t bufferSizeFrames;
+	snd_pcm_uframes_t bufferFill;
+	int bufferReady;
 
 	int reprepare;
 } sound;
@@ -171,14 +173,29 @@ void audioInit(void)
 	}
 
 	/* Acquire n frames per turn. */
-	sound.frames = SOUND_SAMPLES_PER_TURN;
-	size = sound.frames * 2;  /* 2 bytes/sample, 1 channel */
-	sound.buffer = (char *)malloc(size);
+	sound.bufferSizeFrames = SOUND_SAMPLES_PER_TURN;
+	size = sound.bufferSizeFrames * 2;  /* 2 bytes/sample, 1 channel */
 
+	/* Initialize the buffer. */
+	sound.buffer = (char *)malloc(size);
+	sound.bufferFill = 0;
+	sound.bufferReady = 0;
+
+	/* Try to switch to non-blocking mode for reading. If that fails,
+	 * print a warning and continue in blocking mode. */
+	rc = snd_pcm_nonblock(sound.handle, 1);
+	if (rc < 0)
+	{
+		fprintf(stderr, "Could not switch to non-blocking mode: %s\n",
+				snd_strerror(rc));
+	}
+
+	/* No need to re-prepare for now. */
 	sound.reprepare = 0;
 }
 
-/* Read one period. */
+/* Read as far as you can (when in non-blocking mode) or until our
+ * buffer is filled (when in blocking mode). */
 int audioRead(void)
 {
 	if (sound.reprepare)
@@ -187,23 +204,42 @@ int audioRead(void)
 		sound.reprepare = 0;
 	}
 
-	int rc;
-	rc = snd_pcm_readi(sound.handle, sound.buffer, sound.frames);
+	/* Request
+	 *   "size - fill" frames
+	 * starting at
+	 *   "base + numFramesFilled * 2" bytes.
+	 * Do "* 2" because we get two bytes per sample.
+	 *
+	 * When in blocking mode, this always fills the buffer to its
+	 * maximum capacity.
+	 */
+	snd_pcm_sframes_t rc;
+	rc = snd_pcm_readi(sound.handle, sound.buffer + (sound.bufferFill * 2),
+			sound.bufferSizeFrames - sound.bufferFill);
 	if (rc == -EPIPE)
 	{
 		/* EPIPE means overrun */
 		fprintf(stderr, "overrun occurred\n");
 		snd_pcm_prepare(sound.handle);
 	}
+	else if (rc == -EAGAIN)
+	{
+		/* Not ready yet. Come back again later. */
+	}
 	else if (rc < 0)
 	{
 		fprintf(stderr, "error from read: %s\n", snd_strerror(rc));
 	}
-	else if (rc != (int)sound.frames)
+	else
 	{
-		fprintf(stderr, "short read, read %d frames\n", rc);
+		sound.bufferFill += rc;
+		if (sound.bufferFill == sound.bufferSizeFrames)
+		{
+			/* Buffer full. display() can add this to the history. */
+			sound.bufferFill = 0;
+			sound.bufferReady = 1;
+		}
 	}
-	sound.bufferCountFrames = rc;
 
 	return rc;
 }
@@ -219,10 +255,10 @@ void audioDeinit(void)
 /* Create FFTW-plan, allocate buffers. */
 void fftwInit(void)
 {
-	fftw.outlen = sound.frames / 2;
-	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.frames);
+	fftw.outlen = sound.bufferSizeFrames / 2;
+	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.bufferSizeFrames);
 	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * fftw.outlen);
-	fftw.plan = fftw_plan_dft_r2c_1d(sound.frames, fftw.in, fftw.out,
+	fftw.plan = fftw_plan_dft_r2c_1d(sound.bufferSizeFrames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
 
 	fftw.currentLine = (double *)malloc(sizeof(double) * fftw.outlen);
@@ -256,18 +292,24 @@ void updateDisplay(void)
 
 	if (interaction.update)
 	{
-		/* Read again if it failed. */
+		/* Try again *now* if it failed. */
 		while (audioRead() < 0);
+	}
 
-		/* Calculate spectrum. */
-		for (i = 0; i < sound.bufferCountFrames; i++)
+	if (sound.bufferReady)
+	{
+		/* The buffer is marked as "full". We can now read it. After the
+		 * texture has been updated, the buffer gets marked as "not
+		 * ready". */
+
+		/* Calculate spectrum. Casting "sound.bufferSizeFrames" works as
+		 * long as it's less than 2GB. I assume this to be true because
+		 * nobody will read 2GB at once from his sound card (at least
+		 * not today :-). */
+		for (i = 0; i < (int)sound.bufferSizeFrames; i++)
 		{
 			short int val = getFrame(sound.buffer, i);
 			fftw.in[i] = 2 * (double)val / (256 * 256);
-		}
-		for (i = sound.bufferCountFrames; i < (int)sound.frames; i++)
-		{
-			fftw.in[i] = 0;
 		}
 		fftw_execute(fftw.plan);
 
@@ -316,15 +358,21 @@ void updateDisplay(void)
 		}
 	}
 
-	/* Update texture. */
+	/* Enable texturing for the quad/history. */
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
-	if (interaction.update)
+	if (sound.bufferReady)
 	{
+		/* Update texture. */
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 				fftw.textureWidth, fftw.textureHeight,
 				GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
 		checkError(__LINE__);
+
+		/* Reset buffer state. The buffer is no longer ready and we
+		 * can't update the texture from it until audioRead() re-marked
+		 * it as ready. */
+		sound.bufferReady = 0;
 	}
 
 	/* Apply zoom and panning. */
