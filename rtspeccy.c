@@ -158,11 +158,6 @@ void audioInit(void)
 	val = SOUND_RATE;
 	snd_pcm_hw_params_set_rate_near(sound.handle, params, &val, &dir);
 
-	/* Set period size to ("nearly") 1024 frames. */
-	sound.frames = 1024;
-	snd_pcm_hw_params_set_period_size_near(sound.handle, params,
-			&sound.frames, &dir);
-
 	/* Write the parameters to the driver. */
 	rc = snd_pcm_hw_params(sound.handle, params);
 	if (rc < 0)
