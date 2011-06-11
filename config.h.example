@@ -8,10 +8,14 @@
 
 /* A higher value means larger latency and more memory consumption. On
  * the other hand, a higher value also results in a higher resolution of
- * the spectrogram. */
+ * the spectrogram.
+ *
+ * Note: This value must be 2^(n + 1) for some integer n > 0. */
 #define SOUND_SAMPLES_PER_TURN 2048
 
-/* Number of lines in the spectrogram history (upper half of the screen). */
+/* Number of lines in the spectrogram history (upper half of the screen).
+ *
+ * Note: This value must be 2^m for some integer m > 0. */
 #define FFTW_HISTORY_SIZE 256
 
 /* The fourier transformation produced by libfftw3 is not normalized.
