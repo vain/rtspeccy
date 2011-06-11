@@ -214,8 +214,7 @@ int audioRead(void)
 	if (rc == -EPIPE)
 	{
 		/* EPIPE means overrun */
-		fprintf(stderr, "overrun occurred\n");
-		snd_pcm_prepare(sound.handle);
+		snd_pcm_recover(sound.handle, rc, 0);
 	}
 	else if (rc == -EAGAIN)
 	{
