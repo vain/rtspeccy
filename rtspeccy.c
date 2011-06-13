@@ -265,6 +265,7 @@ void fftwInit(void)
 			FFTW_ESTIMATE);
 
 	fftw.currentLine = (double *)malloc(sizeof(double) * fftw.outlen);
+	memset(fftw.currentLine, 0, sizeof(double) * fftw.outlen);
 
 	fftw.textureWidth = fftw.outlen;
 	fftw.textureHeight = FFTW_HISTORY_SIZE;
