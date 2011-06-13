@@ -158,8 +158,12 @@ void audioInit(void)
 	val = SOUND_RATE;
 	snd_pcm_hw_params_set_rate_near(sound.handle, params, &val, &dir);
 
-	/* Set period size to ("nearly") 1024 frames. */
-	snd_pcm_uframes_t frames = 1024;
+	/* Set period size. It's best to set this to the same value as
+	 * SOUND_SAMPLES_PER_TURN. A lower value would generate more
+	 * hardware interrupts and thus a lower latency but that's of no use
+	 * since we have to wait for an amount of SOUND_SAMPLES_PER_TURN
+	 * samples anyway. */
+	snd_pcm_uframes_t frames = SOUND_SAMPLES_PER_TURN;
 	snd_pcm_hw_params_set_period_size_near(sound.handle, params,
 			&frames, &dir);
 
