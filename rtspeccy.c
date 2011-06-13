@@ -194,8 +194,8 @@ void audioInit(void)
 				snd_strerror(rc));
 	}
 
-	/* No need to re-prepare for now. */
-	sound.reprepare = 0;
+	/* Prepare in audioRead() for the first time. */
+	sound.reprepare = 1;
 }
 
 /* Read as far as you can (when in non-blocking mode) or until our
