@@ -516,6 +516,7 @@ void keyboard(unsigned char key,
 	switch (key)
 	{
 		case 27:
+		case 'q':
 			exit(EXIT_SUCCESS);
 
 		case ' ':

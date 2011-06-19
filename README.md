@@ -50,7 +50,7 @@ Controls
  * Mouse wheel: Zoom along the X axis.
  * Right mouse drag: Pan along the X axis.
  * Left mouse: Show overtone guidelines.
- * Escape: Quit.
+ * Escape or `q`: Quit.
 
 Contact
 -------
