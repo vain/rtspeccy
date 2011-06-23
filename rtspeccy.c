@@ -41,6 +41,7 @@ struct interactionInfo
 	int showOvertones;
 	int doPanning;
 	int forceOverview;
+	int showMainGrid;
 
 	int lastMouseDownBS[2];
 	int lastMouseDownES[2];
@@ -456,7 +457,7 @@ void updateDisplay(void)
 			glVertex2f(x - 1,  1);
 		}
 	}
-	else
+	else if (interaction.showMainGrid)
 	{
 		/* Show "main grid" otherwise. */
 		float colgrid1[3] = DISPLAY_LINECOLOR_GRID_1;
@@ -557,6 +558,10 @@ void keyboard(unsigned char key,
 			interaction.scaleX = 4;
 			interaction.offsetX = 0.75;
 			interaction.lastOffsetX = interaction.offsetX;
+			break;
+
+		case 'g':
+			interaction.showMainGrid = !interaction.showMainGrid;
 			break;
 	}
 }
@@ -662,6 +667,7 @@ void displayInit(int argc, char *argv[])
 	interaction.showOvertones = 0;
 	interaction.doPanning = 0;
 	interaction.forceOverview = 0;
+	interaction.showMainGrid = 1;
 	interaction.scaleX = 1;
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;

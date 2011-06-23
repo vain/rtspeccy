@@ -40,6 +40,7 @@ Controls
  * Space bar: Freeze.
  * `r` or `u`: Reset view (zooming, panning).
  * `o`: Force overview, i.e. temporarily disable zooming and panning.
+ * `g`: Toggle main grid.
  * `h`: Pan screen a quarter to the left.
  * `l`: Pan screen a quarter to the right.
  * `j`: Multiply zoom factor by 2.
