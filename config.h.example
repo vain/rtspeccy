@@ -34,6 +34,9 @@
 /* Color of the "current" spectrogram (bottom of the screen). */
 #define DISPLAY_SPEC_CURRENT_COLOR { 0, 1, 0 }
 
+/* Color of the waveform (if shown). */
+#define DISPLAY_WAVEFORM_COLOR { 1, 0, 0 }
+
 #define DISPLAY_SPEC_HISTORY_RAMP_NUM 3
 /* 2D array: { pos, red, green, blue }. That is, the value 0.1 will get
  * a color between { 0, 0, 0 } and { 0, 0, 1 } because it's less than

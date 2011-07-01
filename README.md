@@ -51,6 +51,7 @@ Controls
  * Mouse wheel: Zoom along the X axis.
  * Right mouse drag: Pan along the X axis.
  * Left mouse: Show overtone guidelines.
+ * `w`: Toggle between current line spectrum and waveform.
  * Escape or `q`: Quit.
 
 Contact

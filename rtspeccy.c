@@ -42,6 +42,7 @@ struct interactionInfo
 	int doPanning;
 	int forceOverview;
 	int showMainGrid;
+	int showWaveform;
 
 	int lastMouseDownBS[2];
 	int lastMouseDownES[2];
@@ -57,7 +58,7 @@ struct soundInfo
 {
 	snd_pcm_t *handle;
 
-	char *buffer;
+	char *buffer, *bufferLast;
 	snd_pcm_uframes_t bufferSizeFrames;
 	snd_pcm_uframes_t bufferFill;
 	int bufferReady;
@@ -183,6 +184,7 @@ void audioInit(void)
 
 	/* Initialize the buffer. */
 	sound.buffer = (char *)malloc(size);
+	sound.bufferLast = (char *)malloc(size);
 	sound.bufferFill = 0;
 	sound.bufferReady = 0;
 
@@ -254,6 +256,7 @@ void audioDeinit(void)
 	snd_pcm_drain(sound.handle);
 	snd_pcm_close(sound.handle);
 	free(sound.buffer);
+	free(sound.bufferLast);
 }
 
 /* Create FFTW-plan, allocate buffers. */
@@ -306,6 +309,11 @@ void updateDisplay(void)
 		/* The buffer is marked as "full". We can now read it. After the
 		 * texture has been updated, the buffer gets marked as "not
 		 * ready". */
+
+		/* First, copy the current buffer to the secondary buffer. We
+		 * will show that second buffer if the first buffer is not yet
+		 * ready. */
+		memmove(sound.bufferLast, sound.buffer, sound.bufferSizeFrames * 2);
 
 		/* Calculate spectrum. Casting "sound.bufferSizeFrames" works as
 		 * long as it's less than 2GB. I assume this to be true because
@@ -400,21 +408,47 @@ void updateDisplay(void)
 	glDisable(GL_TEXTURE_2D);
 
 	/* Show current spectrum. */
-	float curcol[3] = DISPLAY_SPEC_CURRENT_COLOR;
-	glColor3fv(curcol);
-	glBegin(GL_LINE_STRIP);
-	for (i = 0; i < fftw.outlen; i++)
+	if (!interaction.showWaveform)
 	{
-		double relX = 2 * ((double)i / fftw.outlen) - 1;
-		double relY = fftw.currentLine[i];
-		relY /= 2;
-		relY -= 1;
-		glVertex2f(relX, relY);
+		float curcol[3] = DISPLAY_SPEC_CURRENT_COLOR;
+		glColor3fv(curcol);
+		glBegin(GL_LINE_STRIP);
+		for (i = 0; i < fftw.outlen; i++)
+		{
+			double relX = 2 * ((double)i / fftw.outlen) - 1;
+			double relY = fftw.currentLine[i];
+			relY /= 2;
+			relY -= 1;
+			glVertex2f(relX, relY);
+		}
+		glEnd();
 	}
-	glEnd();
+	else
+	{
+		glPushMatrix();
+		glLoadIdentity();
+		float curcol[3] = DISPLAY_WAVEFORM_COLOR;
+		glColor3fv(curcol);
+		glBegin(GL_LINE_STRIP);
+		for (i = 0; i < (int)sound.bufferSizeFrames; i++)
+		{
+			short int val = getFrame(sound.bufferLast, i);
+			double relX = 2 * ((double)i / sound.bufferSizeFrames) - 1;
+			double relY = (double)val / (256 * 256);
+			relY /= 2;
+			relY -= 0.75;
+			glVertex2f(relX, relY);
+		}
+		glEnd();
+		glPopMatrix();
+	}
 
 	/* Everything from now on will be line segments. */
 	glBegin(GL_LINES);
+
+	float lineYStart = -1;
+	if (interaction.showWaveform)
+		lineYStart = -0.5;
 
 	/* Current line and overtones? */
 	if (interaction.showOvertones)
@@ -422,8 +456,8 @@ void updateDisplay(void)
 		/* Crosshair. */
 		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
 		glColor3fv(colcross);
-		glVertex2f(interaction.lastMouseDownEW[0], -1);
-		glVertex2f(interaction.lastMouseDownEW[0],  1);
+		glVertex2f(interaction.lastMouseDownEW[0], lineYStart);
+		glVertex2f(interaction.lastMouseDownEW[0], 1);
 
 		glColor3fv(colcross);
 		glVertex2f(-1, interaction.lastMouseDownEW[1]);
@@ -441,8 +475,8 @@ void updateDisplay(void)
 			double x = xInitial * 2;
 			while (x - 1 < 1)
 			{
-				glVertex2f(x - 1, -1);
-				glVertex2f(x - 1,  1);
+				glVertex2f(x - 1, lineYStart);
+				glVertex2f(x - 1, 1);
 				x += xInitial;
 			}
 		}
@@ -453,8 +487,8 @@ void updateDisplay(void)
 				- (0.25 * x * interaction.width * nowscale) > 2)
 		{
 			x /= 2;
-			glVertex2f(x - 1, -1);
-			glVertex2f(x - 1,  1);
+			glVertex2f(x - 1, lineYStart);
+			glVertex2f(x - 1, 1);
 		}
 	}
 	else if (interaction.showMainGrid)
@@ -462,15 +496,15 @@ void updateDisplay(void)
 		/* Show "main grid" otherwise. */
 		float colgrid1[3] = DISPLAY_LINECOLOR_GRID_1;
 		glColor3fv(colgrid1);
-		glVertex2f(0, -1);
+		glVertex2f(0, lineYStart);
 		glVertex2f(0, 1);
 
 		float colgrid2[3] = DISPLAY_LINECOLOR_GRID_2;
 		glColor3fv(colgrid2);
-		glVertex2f(0.5, -1);
+		glVertex2f(0.5, lineYStart);
 		glVertex2f(0.5, 1);
 
-		glVertex2f(-0.5, -1);
+		glVertex2f(-0.5, lineYStart);
 		glVertex2f(-0.5, 1);
 	}
 
@@ -480,11 +514,11 @@ void updateDisplay(void)
 	glVertex2f(-1, -0.5);
 	glVertex2f( 1, -0.5);
 
-	glVertex2f(-1, -1);
-	glVertex2f(-1,  1);
+	glVertex2f(-1, lineYStart);
+	glVertex2f(-1, 1);
 
-	glVertex2f( 1, -1);
-	glVertex2f( 1,  1);
+	glVertex2f( 1, lineYStart);
+	glVertex2f( 1, 1);
 
 	/* End of line segments. */
 	glEnd();
@@ -562,6 +596,10 @@ void keyboard(unsigned char key,
 
 		case 'g':
 			interaction.showMainGrid = !interaction.showMainGrid;
+			break;
+
+		case 'w':
+			interaction.showWaveform = !interaction.showWaveform;
 			break;
 	}
 }
@@ -668,6 +706,7 @@ void displayInit(int argc, char *argv[])
 	interaction.doPanning = 0;
 	interaction.forceOverview = 0;
 	interaction.showMainGrid = 1;
+	interaction.showWaveform = 0;
 	interaction.scaleX = 1;
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
