@@ -415,9 +415,12 @@ void updateDisplay(void)
 		glBegin(GL_LINE_STRIP);
 		for (i = 0; i < fftw.outlen; i++)
 		{
+			/* relX will be in [-1, 1], relY will be in [0, 1]. */
 			double relX = 2 * ((double)i / fftw.outlen) - 1;
 			double relY = fftw.currentLine[i];
-			relY /= 2;
+
+			/* Move relY so it'll be shown at the bottom of the screen. */
+			relY *= 0.5;
 			relY -= 1;
 			glVertex2f(relX, relY);
 		}
@@ -432,10 +435,18 @@ void updateDisplay(void)
 		glBegin(GL_LINE_STRIP);
 		for (i = 0; i < (int)sound.bufferSizeFrames; i++)
 		{
+			/* relX will be in [-1, 1], relY will be in [-s, s] where s
+			 * is WAVEFORM_SCALE. */
 			short int val = getFrame(sound.bufferLast, i);
 			double relX = 2 * ((double)i / sound.bufferSizeFrames) - 1;
-			double relY = (double)val / (256 * 256);
-			relY /= 2;
+			double relY = 2 * WAVEFORM_SCALE * (double)val / (256 * 256);
+
+			/* Clamp relY ... WAVEFORM_SCALE may be too high. */
+			relY = relY > 1 ? 1 : relY;
+			relY = relY < -1 ? -1 : relY;
+
+			/* Move relY so it'll be shown at the bottom of the screen. */
+			relY *= 0.25;
 			relY -= 0.75;
 			glVertex2f(relX, relY);
 		}

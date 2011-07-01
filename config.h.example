@@ -20,8 +20,12 @@
 
 /* The fourier transformation produced by libfftw3 is not normalized.
  * Hence, you need to provide a scaling factor. This is a sane default.
- * Reduce this if you see too much noise. */
+ * Increase this value if you see too much noise. */
 #define FFTW_SCALE (0.0125 * fftw.outlen)
+
+/* "Home audio" microphones tend to be very quiet. Increase this value
+ * if the waveform's amplitude is too low (or adjust your mixer). */
+#define WAVEFORM_SCALE 4
 
 /* Initial size of the window. */
 #define DISPLAY_INITIAL_WIDTH 512
