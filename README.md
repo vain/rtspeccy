@@ -34,6 +34,21 @@ Configuration
 rtspeccy is configured via its `config.h`. An example is shipped with
 the source code. It's pretty self explanatory.
 
+However, you can change the capture device at startup time. Set the
+environment variable `RTSPECCY_CAPTURE_DEVICE` in order to do that. See
+`arecord -L` for a list of available devices. For example, to switch to
+my Samson C03U, I do:
+
+	$ arecord -L
+	...
+	front:CARD=C03U,DEV=0
+	    Samson C03U, USB Audio
+	...
+	$ RTSPECCY_CAPTURE_DEVICE='front:CARD=C03U,DEV=0' rtspeccy
+
+These identifiers usually don't change, so you can set up shell aliases
+for them.
+
 Controls
 --------
 
