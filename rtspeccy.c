@@ -120,6 +120,16 @@ short int getFrame(char *buffer, int i)
 		+ ((buffer[2 * i + 1] & 0xFF) << 8);
 }
 
+/* Return the environment variable "name" or "def" if it's unset. */
+char *getenvDefault(char *name, char *def)
+{
+	char *val = getenv(name);
+	if (val == NULL)
+		return def;
+	else
+		return val;
+}
+
 /* Open and init the default recording device. */
 void audioInit(void)
 {
@@ -130,7 +140,8 @@ void audioInit(void)
 	int dir = 0;
 
 	/* Open PCM device for recording (capture). */
-	rc = snd_pcm_open(&sound.handle, SOUND_DEVICE, SND_PCM_STREAM_CAPTURE, 0);
+	rc = snd_pcm_open(&sound.handle, getenvDefault(SOUND_DEVICE_ENV,
+				SOUND_DEVICE), SND_PCM_STREAM_CAPTURE, 0);
 	if (rc < 0)
 	{
 		fprintf(stderr, "unable to open pcm device: %s\n", snd_strerror(rc));

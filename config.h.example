@@ -2,8 +2,10 @@
 #define CONFIG_H
 
 /* Default recording device, sample rate. Sound is always recorded in
- * mono. */
+ * mono. The device can be overriden at runtime using the environment
+ * variable SOUND_DEVICE_ENV. */
 #define SOUND_DEVICE "default"
+#define SOUND_DEVICE_ENV "RTSPECCY_CAPTURE_DEVICE"
 #define SOUND_RATE 44100
 
 /* A higher value means larger latency and more memory consumption. On
