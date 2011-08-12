@@ -775,10 +775,11 @@ int main(int argc, char *argv[])
 	audioInit();
 	fftwInit();
 	textureInit();
-	glutMainLoop();
-	textureDeinit();
-	audioDeinit();
-	fftwDeinit();
 
-	exit(EXIT_SUCCESS);
+	atexit(audioDeinit);
+	atexit(fftwDeinit);
+	atexit(textureDeinit);
+
+	glutMainLoop();
+	return 0;  /* Not reached. */
 }
