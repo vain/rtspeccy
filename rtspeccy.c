@@ -218,7 +218,21 @@ int audioRead(void)
 {
 	if (sound.reprepare)
 	{
-		snd_pcm_prepare(sound.handle);
+		int ret;
+		ret = snd_pcm_drop(sound.handle);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Error while dropping samples: %s\n",
+					snd_strerror(ret));
+		}
+
+		ret = snd_pcm_prepare(sound.handle);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Error while preparing to record: %s\n",
+					snd_strerror(ret));
+		}
+
 		sound.reprepare = 0;
 	}
 
