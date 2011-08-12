@@ -768,6 +768,7 @@ void textureDeinit(void)
 	glEnable(GL_TEXTURE_2D);
 	glDeleteTextures(1, &fftw.textureHandle);
 	glDisable(GL_TEXTURE_2D);
+	checkError(__LINE__);
 }
 
 int main(int argc, char *argv[])
