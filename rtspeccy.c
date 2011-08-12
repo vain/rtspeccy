@@ -275,7 +275,8 @@ void fftwInit(void)
 {
 	fftw.outlen = sound.bufferSizeFrames / 2;
 	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.bufferSizeFrames);
-	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * fftw.outlen);
+	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex)
+			* (fftw.outlen + 1));
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.bufferSizeFrames, fftw.in, fftw.out,
 			FFTW_ESTIMATE);
 
