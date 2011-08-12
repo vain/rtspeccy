@@ -299,6 +299,7 @@ void fftwDeinit(void)
 	fftw_free(fftw.out);
 	free(fftw.currentLine);
 	free(fftw.textureData);
+	fftw_cleanup();
 }
 
 /* Read from audio device and display current buffer. */
