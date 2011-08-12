@@ -264,7 +264,7 @@ int audioRead(void)
 /* Shutdown audio device. */
 void audioDeinit(void)
 {
-	snd_pcm_drain(sound.handle);
+	snd_pcm_drop(sound.handle);
 	snd_pcm_close(sound.handle);
 	free(sound.buffer);
 	free(sound.bufferLast);
