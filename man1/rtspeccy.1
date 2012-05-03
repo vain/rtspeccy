@@ -1,0 +1,148 @@
+.TH RTSPECCY 1 "May 2012" "rtspeccy" "Real time spectrum analyzer"
+.SH NAME
+rtspeccy \- Real time spectrum analyzer (audio).
+.SH SYNOPSIS
+\fBrtspeccy\fP
+.SH DESCRIPTION
+\fBrtspeccy\fP is a real time spectrum analyzer. Plug in your microphone
+and speak, \fBrtspeccy\fP shall visualize your words. \fBrtspeccy\fP is
+intended to visualize what's being \fIrecorded\fP, not what's being
+\fIplayed\fP.
+.P
+Main features:
+.IP \(bu 4
+Keep it simple. \(lqIt\(rq refers to the code. No complex configuration
+file, simply a \fIconfig.h\fP.
+.IP \(bu 4
+Uses ALSA to record sound.
+.IP \(bu 4
+Uses FFTW3 to calculate the spectrum.
+.IP \(bu 4
+Displays the spectrogram using OpenGL (glut).
+.IP \(bu 4
+Split screen: Show history as well as current spectrum.
+.IP \(bu 4
+Freeze, zooming and panning.
+.IP \(bu 4
+Overtone guidelines: Click and hold the left mouse button to show
+guidelines which indicate where over- and undertones of the current
+frequency are located.
+.IP \(bu 4
+History is colored via a color ramp. This can be set in your
+\fIconfig.h\fP.
+.IP \(bu 4
+Free software (GPL3+).
+.SH OPTIONS
+There are no command line options.
+.SH CONFIGURATION
+Most of the program's options can only be set at compile time. Have a
+look at the shipped \fIconfig.h.example\fP to see what's possible. It's
+well documented and pretty self explanatory, but you are expected to
+know a little bit of C.
+.P
+However, you can change the capture device at startup time. Set the
+environment variable $\fBRTSPECCY_CAPTURE_DEVICE\fP in order to do that.
+See \fBarecord -L\fP for a list of available devices. For example, to
+switch to my Samson C03U, I do:
+.P
+\f(CW
+.nf
+$ arecord -L
+\&...
+front:CARD=C03U,DEV=0
+    Samson C03U, USB Audio
+\&...
+$ RTSPECCY_CAPTURE_DEVICE='front:CARD=C03U,DEV=0' rtspeccy
+.fi
+\fP
+.P
+These identifiers usually don't change, so you can set up shell aliases
+for them.
+.SH CONTROLS
+.TP
+Space bar
+Freeze.
+.TP
+\fBr\fP or \fBu\fP
+Reset view (zooming, panning).
+.TP
+\fBo\fP
+Force overview, i.e. temporarily disable zooming and panning. Press
+\fBo\fP again to go back to your previous view.
+.TP
+\fBg\fP
+Toggle main grid.
+.TP
+\fBh\fP
+Pan screen a quarter to the left.
+.TP
+\fBl\fP
+Pan screen a quarter to the right.
+.TP
+\fBj\fP
+Multiply zoom factor by 2.
+.TP
+\fBk\fP
+Divide zoom factor by 2.
+.TP
+\fBH\fP
+Most of the interesting stuff happens in the first quarter of the
+spectrogram, \fBH\fP focuses that region (short for \fBj\fP, \fBh\fP,
+\fBh\fP, \fBj\fP, \fBh\fP, \fBh\fP).
+.TP
+Mouse wheel
+Zoom along the X axis.
+.TP
+Right mouse drag
+Pan along the X axis.
+.TP
+Left mouse click and hold
+Show overtone guidelines.
+.TP
+\fBw\fP
+Toggle between current line spectrum and waveform.
+.TP
+Escape or \fBq\fP
+Quit.
+.SH ENVIRONMENT
+.TP
+\fBRTSPECCY_CAPTURE_DEVICE\fP
+Capture device. If unset, the value \(lqdefault\(rq is used.
+.SH FILES
+.TP
+\fIconfig.h\fP
+Configuration at compile time.
+.SH DEPENDENCIES
+If you need to manually compile \fBrtspeccy\fP, the following libraries
+and tools must be installed (in parentheses, the appropriate package
+names in Arch Linux are listed):
+.IP \(bu 4
+make
+.IP \(bu 4
+glut (\fBfreeglut\fP) and OpenGL (\fBlibgl\fP)
+.IP \(bu 4
+Userland ALSA lib (\fBalsa-lib\fP)
+.IP \(bu 4
+FFTW3 (\fBfftw\fP)
+.P
+Once those are installed, you can build \fBpdfpres\fP as follows:
+.P
+\f(CW
+.nf
+$ cd /path/to/sources
+$ cp config.h.example config.h
+$ vim config.h
+$ make
+.fi
+\fP
+.SH BUGS
+If you find a bug, I'd happy to hear about it. Either use the bug
+tracker at \fIhttps://github.com/vain/rtspeccy\fP or send an e-mail to
+\fIpcode@uninformativ.de\fP. If that doesn't work, then you should find
+up to date contact information at \fIhttp://uninformativ.de\fP or
+\fIgopher://uninformativ.de\fP.
+.SH LICENSE
+\fBrtspeccy\fP is released under the terms of \(lqGPL3+\(rq. See the
+accompanying \fILICENSE\fP file.
+.SH HISTORY
+2011 \(en Originally written by Peter Hofmann (pcode@uninformativ.de).

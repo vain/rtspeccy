@@ -1,0 +1,151 @@
+RTSPECCY(1)           Real time spectrum analyzer          RTSPECCY(1)
+
+
+
+NAME
+       rtspeccy - Real time spectrum analyzer (audio).
+
+SYNOPSIS
+       rtspeccy
+
+DESCRIPTION
+       rtspeccy  is a real time spectrum analyzer. Plug in your micro‐
+       phone and speak, rtspeccy shall visualize your words.  rtspeccy
+       is  intended  to  visualize  what's  being recorded, not what's
+       being played.
+
+       Main features:
+
+       ·   Keep it simple. “It” refers to the code. No complex config‐
+           uration file, simply a config.h.
+
+       ·   Uses ALSA to record sound.
+
+       ·   Uses FFTW3 to calculate the spectrum.
+
+       ·   Displays the spectrogram using OpenGL (glut).
+
+       ·   Split screen: Show history as well as current spectrum.
+
+       ·   Freeze, zooming and panning.
+
+       ·   Overtone  guidelines:  Click and hold the left mouse button
+           to show guidelines which indicate where  over-  and  under‐
+           tones of the current frequency are located.
+
+       ·   History  is  colored  via  a color ramp. This can be set in
+           your config.h.
+
+       ·   Free software (GPL3+).
+
+OPTIONS
+       There are no command line options.
+
+CONFIGURATION
+       Most of the program's options can only be set at compile  time.
+       Have  a look at the shipped config.h.example to see what's pos‐
+       sible. It's well documented and pretty  self  explanatory,  but
+       you are expected to know a little bit of C.
+
+       However, you can change the capture device at startup time. Set
+       the environment variable $RTSPECCY_CAPTURE_DEVICE in  order  to
+       do  that.   See arecord -L for a list of available devices. For
+       example, to switch to my Samson C03U, I do:
+
+
+       $ arecord -L
+       ...
+       front:CARD=C03U,DEV=0
+           Samson C03U, USB Audio
+       ...
+       $ RTSPECCY_CAPTURE_DEVICE='front:CARD=C03U,DEV=0' rtspeccy
+
+
+       These identifiers usually don't change, so you can set up shell
+       aliases for them.
+
+CONTROLS
+       Space bar
+              Freeze.
+
+       r or u Reset view (zooming, panning).
+
+       o      Force  overview,  i.e.  temporarily  disable zooming and
+              panning. Press o again to go back to your previous view.
+
+       g      Toggle main grid.
+
+       h      Pan screen a quarter to the left.
+
+       l      Pan screen a quarter to the right.
+
+       j      Multiply zoom factor by 2.
+
+       k      Divide zoom factor by 2.
+
+       H      Most of the interesting stuff happens in the first quar‐
+              ter of the spectrogram, H focuses that region (short for
+              j, h, h, j, h, h).
+
+       Mouse wheel
+              Zoom along the X axis.
+
+       Right mouse drag
+              Pan along the X axis.
+
+       Left mouse click and hold
+              Show overtone guidelines.
+
+       w      Toggle between current line spectrum and waveform.
+
+       Escape or q
+              Quit.
+
+ENVIRONMENT
+       RTSPECCY_CAPTURE_DEVICE
+              Capture device. If unset, the value “default” is used.
+
+FILES
+       config.h
+              Configuration at compile time.
+
+DEPENDENCIES
+       If  you  need  to  manually  compile  rtspeccy,  the  following
+       libraries  and  tools  must  be  installed (in parentheses, the
+       appropriate package names in Arch Linux are listed):
+
+       ·   make
+
+       ·   glut (freeglut) and OpenGL (libgl)
+
+       ·   Userland ALSA lib (alsa-lib)
+
+       ·   FFTW3 (fftw)
+
+       Once those are installed, you can build pdfpres as follows:
+
+
+       $ cd /path/to/sources
+       $ cp config.h.example config.h
+       $ vim config.h
+       $ make
+
+
+BUGS
+       If you find a bug, I'd happy to hear about it. Either  use  the
+       bug  tracker  at https://github.com/vain/rtspeccy or send an e-
+       mail to pcode@uninformativ.de. If that doesn't work,  then  you
+       should find up to date contact information at http://uninforma‐
+       tiv.de or gopher://uninformativ.de.
+
+LICENSE
+       rtspeccy is released under the terms of “GPL3+”. See the accom‐
+       panying LICENSE file.
+
+HISTORY
+       2011  –  Originally  written by Peter Hofmann (pcode@uninforma‐
+       tiv.de).
+
+
+
+rtspeccy                       May 2012                    RTSPECCY(1)
