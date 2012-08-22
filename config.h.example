@@ -55,12 +55,13 @@
 	{ 1,     1, 0, 1 }, \
 	}
 
-/* Line colors. */
+/* Other colors. */
 #define DISPLAY_LINECOLOR_CROSS { 0.7, 0, 0 }
 #define DISPLAY_LINECOLOR_OVERTONES { 0.7, 0.7, 0.7 }
 #define DISPLAY_LINECOLOR_BORDER { 1, 1, 1 }
 #define DISPLAY_LINECOLOR_GRID_1 { 1, 1, 1 }
 #define DISPLAY_LINECOLOR_GRID_2 { 0.3, 0.3, 0.3 }
+#define DISPLAY_TEXTCOLOR { 1, 0, 0 }
 
 /* Zooming. */
 #define INTERACTION_ZOOM_SPEED 1.05

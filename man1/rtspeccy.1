@@ -99,6 +99,13 @@ Pan along the X axis.
 Left mouse click and hold
 Show overtone guidelines.
 .TP
+Middle mouse click and hold
+Show frequency at the mouse pointer's position. Note that this value is
+not that accurate. The spectrogram has a resolution of \fBSOUND_RATE /
+SOUND_SAMPLES_PER_TURN\fP hertz (see \fIconfig.h\fP to set these
+values), that is about 21 Hz for a rate of 44100 and 2048 samples per
+turn.
+.TP
 \fBw\fP
 Toggle between current line spectrum and waveform.
 .TP

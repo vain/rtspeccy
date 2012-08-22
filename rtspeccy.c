@@ -43,6 +43,7 @@ struct interactionInfo
 	int forceOverview;
 	int showMainGrid;
 	int showWaveform;
+	int showFrequency;
 
 	int lastMouseDownBS[2];
 	int lastMouseDownES[2];
@@ -561,6 +562,44 @@ void updateDisplay(void)
 	/* End of line segments. */
 	glEnd();
 
+	if (interaction.showFrequency)
+	{
+		/* Scale from [-1, 1] to [0, fftw.outlen). */
+		double t = (interaction.lastMouseDownEW[0] + 1) / 2.0;
+		int bin = (int)(t * fftw.outlen);
+		bin = (bin < 0 ? 0 : bin);
+		bin = (bin >= fftw.outlen ? fftw.outlen - 1 : bin);
+
+		/* SOUND_RATE and SOUND_SAMPLES_PER_TURN determine the "size" of
+		 * each "bin". Each bin has a size of some hertz. The i'th bin
+		 * corresponds to a frequency of i * <that size> Hz. Note that
+		 * the resolution is pretty low on most setups, so it doesn't
+		 * make any sense to display decimal places. */
+		int freq = (int)(((double)SOUND_RATE /
+			(double)SOUND_SAMPLES_PER_TURN) * bin);
+
+		/* Draw frequency. */
+		float coltext[3] = DISPLAY_TEXTCOLOR;
+		glColor3fv(coltext);
+
+		char freqstr[256] = "";
+		glRasterPos2d(interaction.lastMouseDownEW[0],
+				interaction.lastMouseDownEW[1]);
+		snprintf(freqstr, 256, " <- approx. %d Hz", freq);
+
+		size_t i;
+		for (i = 0; i < strlen(freqstr); i++)
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, freqstr[i]);
+
+		/* Show guideline for this frequency. */
+		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
+		glColor3fv(colcross);
+		glBegin(GL_LINES);
+		glVertex2f(interaction.lastMouseDownEW[0], lineYStart);
+		glVertex2f(interaction.lastMouseDownEW[0], 1);
+		glEnd();
+	}
+
 	glutSwapBuffers();
 }
 
@@ -669,8 +708,9 @@ void mouse(int button, int state, int x, int y)
 {
 	if (state == GLUT_DOWN)
 	{
-		/* Save mouse positions for panning or overtones. */
-		if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON)
+		/* Save mouse positions for everything but zooming. */
+		if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON
+				|| button == GLUT_MIDDLE_BUTTON)
 		{
 			interaction.lastMouseDownBS[0] = x;
 			interaction.lastMouseDownBS[1] = y;
@@ -699,6 +739,10 @@ void mouse(int button, int state, int x, int y)
 			if (interaction.scaleX < 1)
 				interaction.scaleX = 1;
 		}
+		else if (button == GLUT_MIDDLE_BUTTON)
+		{
+			interaction.showFrequency = 1;
+		}
 	}
 	else
 	{
@@ -713,13 +757,15 @@ void mouse(int button, int state, int x, int y)
 
 		interaction.showOvertones = 0;
 		interaction.doPanning = 0;
+		interaction.showFrequency = 0;
 	}
 }
 
 /* Mouse movements/drags. */
 void motion(int x, int y)
 {
-	if (!interaction.showOvertones && !interaction.doPanning)
+	if (!interaction.showOvertones && !interaction.doPanning
+			&& !interaction.showFrequency)
 		return;
 
 	interaction.lastMouseDownES[0] = x;

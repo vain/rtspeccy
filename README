@@ -96,6 +96,13 @@ CONTROLS
        Left mouse click and hold
               Show overtone guidelines.
 
+       Middle mouse click and hold
+              Show frequency at the  mouse  pointer's  position.  Note
+              that  this  value  is not that accurate. The spectrogram
+              has a resolution of SOUND_RATE /  SOUND_SAMPLES_PER_TURN
+              hertz  (see config.h to set these values), that is about
+              21 Hz for a rate of 44100 and 2048 samples per turn.
+
        w      Toggle between current line spectrum and waveform.
 
        Escape or q
