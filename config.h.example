@@ -68,6 +68,11 @@
 #define INTERACTION_ZOOM_IN 4        /* Usually mouse wheel down */
 #define INTERACTION_ZOOM_OUT 3       /* Usually mouse wheel up */
 
+/* Most of the interesting stuff (when you're singing or speaking)
+ * happens in the first quarter of the spectrogram. We will zoom into
+ * that area by default if the following constant is defined. */
+#define INTERACTION_ZOOM_STARTUP_FIRST_QUARTER
+
 #endif /* CONFIG_H */
 
 /* vim: set ft=cpp : */

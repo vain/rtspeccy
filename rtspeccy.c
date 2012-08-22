@@ -795,6 +795,12 @@ void displayInit(int argc, char *argv[])
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
 
+#ifdef INTERACTION_ZOOM_STARTUP_FIRST_QUARTER
+	interaction.scaleX = 4;
+	interaction.offsetX = 0.75;
+	interaction.lastOffsetX = interaction.offsetX;
+#endif
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(interaction.width, interaction.height);
