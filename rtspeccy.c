@@ -482,9 +482,6 @@ void updateDisplay(void)
 		glPopMatrix();
 	}
 
-	/* Everything from now on will be line segments. */
-	glBegin(GL_LINES);
-
 	float lineYStart = -1;
 	if (interaction.showWaveform)
 		lineYStart = -0.5;
@@ -492,6 +489,8 @@ void updateDisplay(void)
 	/* Current line and overtones? */
 	if (interaction.showOvertones)
 	{
+		glBegin(GL_LINES);
+
 		/* Crosshair. */
 		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
 		glColor3fv(colcross);
@@ -529,9 +528,13 @@ void updateDisplay(void)
 			glVertex2f(x - 1, lineYStart);
 			glVertex2f(x - 1, 1);
 		}
+
+		glEnd();
 	}
 	else if (interaction.showMainGrid)
 	{
+		glBegin(GL_LINES);
+
 		/* Show "main grid" otherwise. */
 		float colgrid1[3] = DISPLAY_LINECOLOR_GRID_1;
 		glColor3fv(colgrid1);
@@ -545,22 +548,9 @@ void updateDisplay(void)
 
 		glVertex2f(-0.5, lineYStart);
 		glVertex2f(-0.5, 1);
+
+		glEnd();
 	}
-
-	/* Separator between current spectrum and history; border. */
-	float colborder[3] = DISPLAY_LINECOLOR_BORDER;
-	glColor3fv(colborder);
-	glVertex2f(-1, -0.5);
-	glVertex2f( 1, -0.5);
-
-	glVertex2f(-1, lineYStart);
-	glVertex2f(-1, 1);
-
-	glVertex2f( 1, lineYStart);
-	glVertex2f( 1, 1);
-
-	/* End of line segments. */
-	glEnd();
 
 	if (interaction.showFrequency)
 	{
@@ -599,6 +589,22 @@ void updateDisplay(void)
 		glVertex2f(interaction.lastMouseDownEW[0], 1);
 		glEnd();
 	}
+
+	/* Separator between current spectrum and history; border. */
+	glBegin(GL_LINES);
+
+	float colborder[3] = DISPLAY_LINECOLOR_BORDER;
+	glColor3fv(colborder);
+	glVertex2f(-1, -0.5);
+	glVertex2f( 1, -0.5);
+
+	glVertex2f(-1, lineYStart);
+	glVertex2f(-1, 1);
+
+	glVertex2f( 1, lineYStart);
+	glVertex2f( 1, 1);
+
+	glEnd();
 
 	glutSwapBuffers();
 }
