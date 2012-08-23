@@ -44,6 +44,7 @@ struct interactionInfo
 	int showMainGrid;
 	int showWaveform;
 	int showFrequency;
+	int frequencyLabelLeft;
 
 	int lastMouseDownBS[2];
 	int lastMouseDownES[2];
@@ -575,8 +576,20 @@ void updateDisplay(void)
 		double screenX = (interaction.lastMouseDownEW[0]
 				+ interaction.offsetX) * interaction.scaleX;
 
+		/* Flipping the label could be done at exactly 50% of the
+		 * screen. But we only flip it if it's some pixels away from the
+		 * center. */
+		if (screenX < -0.25)
+		{
+			interaction.frequencyLabelLeft = 1;
+		}
+		else if (screenX > 0.25)
+		{
+			interaction.frequencyLabelLeft = 0;
+		}
+
 		char freqstr[256] = "";
-		if (screenX < 0)
+		if (interaction.frequencyLabelLeft)
 		{
 			glRasterPos2d(interaction.lastMouseDownEW[0],
 					interaction.lastMouseDownEW[1]);
@@ -815,6 +828,7 @@ void displayInit(int argc, char *argv[])
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
 	interaction.showFrequency = 0;
+	interaction.frequencyLabelLeft = 1;
 
 #ifdef INTERACTION_ZOOM_STARTUP_FIRST_QUARTER
 	interaction.scaleX = 4;
