@@ -814,6 +814,7 @@ void displayInit(int argc, char *argv[])
 	interaction.scaleX = 1;
 	interaction.offsetX = 0;
 	interaction.lastOffsetX = 0;
+	interaction.showFrequency = 0;
 
 #ifdef INTERACTION_ZOOM_STARTUP_FIRST_QUARTER
 	interaction.scaleX = 4;
