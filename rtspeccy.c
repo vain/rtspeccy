@@ -568,14 +568,28 @@ void updateDisplay(void)
 		int freq = (int)(((double)SOUND_RATE /
 			(double)SOUND_SAMPLES_PER_TURN) * bin);
 
-		/* Draw frequency. */
+		/* Draw frequency -- left or right of the guide line. */
 		float coltext[3] = DISPLAY_TEXTCOLOR;
 		glColor3fv(coltext);
 
+		double screenX = (interaction.lastMouseDownEW[0]
+				+ interaction.offsetX) * interaction.scaleX;
+
 		char freqstr[256] = "";
-		glRasterPos2d(interaction.lastMouseDownEW[0],
-				interaction.lastMouseDownEW[1]);
-		snprintf(freqstr, 256, " <- approx. %d Hz", freq);
+		if (screenX < 0)
+		{
+			glRasterPos2d(interaction.lastMouseDownEW[0],
+					interaction.lastMouseDownEW[1]);
+			snprintf(freqstr, 256, " <- approx. %d Hz", freq);
+		}
+		else
+		{
+			snprintf(freqstr, 256, "approx. %d Hz -> ", freq);
+			glRasterPos2d(interaction.lastMouseDownEW[0]
+					- 10 * (double)strlen(freqstr) / interaction.width
+					/ interaction.scaleX,
+					interaction.lastMouseDownEW[1]);
+		}
 
 		size_t i;
 		for (i = 0; i < strlen(freqstr); i++)
