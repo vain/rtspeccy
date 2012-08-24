@@ -12,7 +12,7 @@
  * the other hand, a higher value also results in a higher resolution of
  * the spectrogram.
  *
- * Note: This value must be 2^(n + 1) for some integer n > 0. */
+ * Note: This value must be 2^n for some integer n > 1. */
 #define SOUND_SAMPLES_PER_TURN 2048
 
 /* Number of lines in the spectrogram history (upper half of the screen).
