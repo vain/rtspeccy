@@ -561,6 +561,10 @@ void updateDisplay(void)
 		bin = (bin < 0 ? 0 : bin);
 		bin = (bin >= fftw.outlen ? fftw.outlen - 1 : bin);
 
+		/* Where exactly is this bin displayed? We want to snap our
+		 * guide line to that position. */
+		double snapX = ((double)bin / fftw.outlen) * 2 - 1;
+
 		/* SOUND_RATE and SOUND_SAMPLES_PER_TURN determine the "size" of
 		 * each "bin". Each bin has a size of some hertz. The i'th bin
 		 * corresponds to a frequency of i * <that size> Hz. Note that
@@ -591,16 +595,14 @@ void updateDisplay(void)
 		char freqstr[256] = "";
 		if (interaction.frequencyLabelLeft)
 		{
-			glRasterPos2d(interaction.lastMouseDownEW[0],
-					interaction.lastMouseDownEW[1]);
+			glRasterPos2d(snapX, interaction.lastMouseDownEW[1]);
 			snprintf(freqstr, 256, " <- approx. %d Hz", freq);
 		}
 		else
 		{
 			snprintf(freqstr, 256, "approx. %d Hz -> ", freq);
-			glRasterPos2d(interaction.lastMouseDownEW[0]
-					- 10 * (double)strlen(freqstr) / interaction.width
-					/ interaction.scaleX,
+			glRasterPos2d(snapX - 10 * (double)strlen(freqstr)
+					/ interaction.width / interaction.scaleX,
 					interaction.lastMouseDownEW[1]);
 		}
 
@@ -612,8 +614,8 @@ void updateDisplay(void)
 		float colcross[3] = DISPLAY_LINECOLOR_CROSS;
 		glColor3fv(colcross);
 		glBegin(GL_LINES);
-		glVertex2f(interaction.lastMouseDownEW[0], lineYStart);
-		glVertex2f(interaction.lastMouseDownEW[0], 1);
+		glVertex2f(snapX, lineYStart);
+		glVertex2f(snapX, 1);
 		glEnd();
 	}
 
