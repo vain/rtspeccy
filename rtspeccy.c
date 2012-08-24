@@ -119,8 +119,7 @@ void checkError(int line)
 /* Get i'th sample from buffer and convert to short int. */
 short int getFrame(char *buffer, int i)
 {
-	return (buffer[2 * i] & 0xFF)
-		+ ((buffer[2 * i + 1] & 0xFF) << 8);
+	return (buffer[2 * i] & 0xFF) + ((buffer[2 * i + 1] & 0xFF) << 8);
 }
 
 /* Return the environment variable "name" or "def" if it's unset. */
@@ -144,7 +143,8 @@ void audioInit(void)
 
 	/* Open PCM device for recording (capture). */
 	rc = snd_pcm_open(&sound.handle, getenvDefault(SOUND_DEVICE_ENV,
-				SOUND_DEVICE), SND_PCM_STREAM_CAPTURE, 0);
+	                                               SOUND_DEVICE),
+	                  SND_PCM_STREAM_CAPTURE, 0);
 	if (rc < 0)
 	{
 		fprintf(stderr, "unable to open pcm device: %s\n", snd_strerror(rc));
@@ -161,11 +161,11 @@ void audioInit(void)
 
 	/* Interleaved mode. */
 	snd_pcm_hw_params_set_access(sound.handle, params,
-			SND_PCM_ACCESS_RW_INTERLEAVED);
+	                             SND_PCM_ACCESS_RW_INTERLEAVED);
 
 	/* Signed 16-bit little-endian format. */
 	snd_pcm_hw_params_set_format(sound.handle, params,
-			SND_PCM_FORMAT_S16_LE);
+	                             SND_PCM_FORMAT_S16_LE);
 
 	/* One channel (mono). */
 	snd_pcm_hw_params_set_channels(sound.handle, params, 1);
@@ -181,14 +181,14 @@ void audioInit(void)
 	 * samples anyway. */
 	snd_pcm_uframes_t frames = SOUND_SAMPLES_PER_TURN;
 	snd_pcm_hw_params_set_period_size_near(sound.handle, params,
-			&frames, &dir);
+	                                       &frames, &dir);
 
 	/* Write the parameters to the driver. */
 	rc = snd_pcm_hw_params(sound.handle, params);
 	if (rc < 0)
 	{
 		fprintf(stderr, "unable to set hw parameters: %s\n",
-				snd_strerror(rc));
+		        snd_strerror(rc));
 		exit(EXIT_FAILURE);
 	}
 
@@ -208,7 +208,7 @@ void audioInit(void)
 	if (rc < 0)
 	{
 		fprintf(stderr, "Could not switch to non-blocking mode: %s\n",
-				snd_strerror(rc));
+		        snd_strerror(rc));
 	}
 
 	/* Prepare in audioRead() for the first time. */
@@ -226,14 +226,14 @@ int audioRead(void)
 		if (ret < 0)
 		{
 			fprintf(stderr, "Error while dropping samples: %s\n",
-					snd_strerror(ret));
+			        snd_strerror(ret));
 		}
 
 		ret = snd_pcm_prepare(sound.handle);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Error while preparing to record: %s\n",
-					snd_strerror(ret));
+			        snd_strerror(ret));
 		}
 
 		sound.reprepare = 0;
@@ -250,7 +250,7 @@ int audioRead(void)
 	 */
 	snd_pcm_sframes_t rc;
 	rc = snd_pcm_readi(sound.handle, sound.buffer + (sound.bufferFill * 2),
-			sound.bufferSizeFrames - sound.bufferFill);
+	                   sound.bufferSizeFrames - sound.bufferFill);
 	if (rc == -EPIPE)
 	{
 		/* EPIPE means overrun */
@@ -293,9 +293,9 @@ void fftwInit(void)
 	fftw.outlen = sound.bufferSizeFrames / 2;
 	fftw.in = (double *)fftw_malloc(sizeof(double) * sound.bufferSizeFrames);
 	fftw.out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex)
-			* (fftw.outlen + 1));
+	                                       * (fftw.outlen + 1));
 	fftw.plan = fftw_plan_dft_r2c_1d(sound.bufferSizeFrames, fftw.in, fftw.out,
-			FFTW_ESTIMATE);
+	                                 FFTW_ESTIMATE);
 
 	fftw.currentLine = (double *)malloc(sizeof(double) * fftw.outlen);
 	memset(fftw.currentLine, 0, sizeof(double) * fftw.outlen);
@@ -303,9 +303,10 @@ void fftwInit(void)
 	fftw.textureWidth = fftw.outlen;
 	fftw.textureHeight = FFTW_HISTORY_SIZE;
 	fftw.textureData = (unsigned char *)malloc(sizeof(unsigned char)
-			* fftw.textureWidth * fftw.textureHeight * 3);
+	                                           * fftw.textureWidth
+	                                           * fftw.textureHeight * 3);
 	memset(fftw.textureData, 0, sizeof(unsigned char)
-			* fftw.textureWidth * fftw.textureHeight * 3);
+	       * fftw.textureWidth * fftw.textureHeight * 3);
 
 	/* How many hertz does one "bin" comprise? */
 	fftw.binWidth = (double)SOUND_RATE / (double)SOUND_SAMPLES_PER_TURN;
@@ -361,14 +362,14 @@ void updateDisplay(void)
 
 		/* Draw history into a texture. First, move old texture one line up. */
 		memmove(fftw.textureData + (3 * fftw.textureWidth), fftw.textureData,
-				(fftw.textureHeight - 1) * fftw.textureWidth * 3);
+		        (fftw.textureHeight - 1) * fftw.textureWidth * 3);
 
 		int ha = 0, ta = 0;
 		double histramp[][4] = DISPLAY_SPEC_HISTORY_RAMP;
 		for (i = 0; i < fftw.outlen; i++)
 		{
 			double val = sqrt(fftw.out[i][0] * fftw.out[i][0]
-					+ fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
+			                  + fftw.out[i][1] * fftw.out[i][1]) / FFTW_SCALE;
 			val = val > 1.0 ? 1.0 : val;
 
 			/* Save current line for current spectrum. */
@@ -378,7 +379,7 @@ void updateDisplay(void)
 			 * interval. */
 			int colat = 1;
 			while (colat < DISPLAY_SPEC_HISTORY_RAMP_NUM
-					&& val > histramp[colat][0])
+			       && val > histramp[colat][0])
 				colat++;
 
 			colat--;
@@ -391,11 +392,11 @@ void updateDisplay(void)
 			/* Interpolate those two colors linearly. */
 			double colnow[3];
 			colnow[0] = histramp[colat][1] * (1 - val)
-				+ val * histramp[colat + 1][1];
+			            + val * histramp[colat + 1][1];
 			colnow[1] = histramp[colat][2] * (1 - val)
-				+ val * histramp[colat + 1][2];
+			            + val * histramp[colat + 1][2];
 			colnow[2] = histramp[colat][3] * (1 - val)
-				+ val * histramp[colat + 1][3];
+			            + val * histramp[colat + 1][3];
 
 			/* Write this line into new first line of the texture. */
 			fftw.textureData[ta++] = (unsigned char)(colnow[0] * 255);
@@ -411,8 +412,8 @@ void updateDisplay(void)
 	{
 		/* Update texture. */
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-				fftw.textureWidth, fftw.textureHeight,
-				GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+		                fftw.textureWidth, fftw.textureHeight,
+		                GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
 		checkError(__LINE__);
 
 		/* Reset buffer state. The buffer is no longer ready and we
@@ -531,7 +532,7 @@ void updateDisplay(void)
 		/* Undertones until two lines are less than 2 pixels apart. */
 		double x = xInitial;
 		while ((0.5 * x * interaction.width * nowscale)
-				- (0.25 * x * interaction.width * nowscale) > 2)
+		       - (0.25 * x * interaction.width * nowscale) > 2)
 		{
 			x /= 2;
 			glVertex2f(x - 1, lineYStart);
@@ -586,7 +587,7 @@ void updateDisplay(void)
 		glColor3fv(coltext);
 
 		double screenX = (interaction.lastMouseDownEW[0]
-				+ interaction.offsetX) * interaction.scaleX;
+		                  + interaction.offsetX) * interaction.scaleX;
 
 		/* Flipping the label could be done at exactly 50% of the
 		 * screen. But we only flip it if it's some pixels away from the
@@ -610,8 +611,8 @@ void updateDisplay(void)
 		{
 			snprintf(freqstr, 256, "approx. %d Hz -> ", freq);
 			glRasterPos2d(snapX - 10 * (double)strlen(freqstr)
-					/ interaction.width / interaction.scaleX,
-					interaction.lastMouseDownEW[1]);
+			              / interaction.width / interaction.scaleX,
+			              interaction.lastMouseDownEW[1]);
 		}
 
 		size_t i;
@@ -665,8 +666,8 @@ void reshape(int w, int h)
 
 /* Keyboard interaction. */
 void keyboard(unsigned char key,
-		int x __attribute__((unused)),
-		int y __attribute__((unused)))
+              int x __attribute__((unused)),
+              int y __attribute__((unused)))
 {
 	switch (key)
 	{
@@ -753,12 +754,12 @@ void mouse(int button, int state, int x, int y)
 	{
 		/* Save mouse positions for everything but zooming. */
 		if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON
-				|| button == GLUT_MIDDLE_BUTTON)
+		    || button == GLUT_MIDDLE_BUTTON)
 		{
 			interaction.lastMouseDownBS[0] = x;
 			interaction.lastMouseDownBS[1] = y;
 			worldCoord(interaction.lastMouseDownBS,
-					interaction.lastMouseDownBW);
+			           interaction.lastMouseDownBW);
 			interaction.lastMouseDownEW[0] = interaction.lastMouseDownBW[0];
 			interaction.lastMouseDownEW[1] = interaction.lastMouseDownBW[1];
 		}
@@ -793,7 +794,7 @@ void mouse(int button, int state, int x, int y)
 		if (interaction.doPanning)
 		{
 			double dx = interaction.lastMouseDownEW[0]
-				- interaction.lastMouseDownBW[0];
+			            - interaction.lastMouseDownBW[0];
 			interaction.offsetX = interaction.lastOffsetX + dx;
 			interaction.lastOffsetX = interaction.offsetX;
 		}
@@ -808,7 +809,7 @@ void mouse(int button, int state, int x, int y)
 void motion(int x, int y)
 {
 	if (!interaction.showOvertones && !interaction.doPanning
-			&& !interaction.showFrequency)
+	    && !interaction.showFrequency)
 		return;
 
 	interaction.lastMouseDownES[0] = x;
@@ -818,7 +819,7 @@ void motion(int x, int y)
 	if (interaction.doPanning)
 	{
 		double dx = interaction.lastMouseDownEW[0]
-			- interaction.lastMouseDownBW[0];
+		            - interaction.lastMouseDownBW[0];
 		interaction.offsetX = interaction.lastOffsetX + dx;
 	}
 }
@@ -866,8 +867,8 @@ void textureInit(void)
 	glGenTextures(1, &fftw.textureHandle);
 	glBindTexture(GL_TEXTURE_2D, fftw.textureHandle);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-			fftw.textureWidth, fftw.textureHeight, 0,
-			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
+	             fftw.textureWidth, fftw.textureHeight, 0,
+	             GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
 	checkError(__LINE__);
 
 	/* "Smooth" texture filtering. */
