@@ -75,6 +75,7 @@ struct fftwInfo
 	fftw_complex *out;
 	fftw_plan plan;
 	int outlen;
+	double binWidth;
 
 	double *currentLine;
 	unsigned char *textureData;
@@ -305,6 +306,9 @@ void fftwInit(void)
 			* fftw.textureWidth * fftw.textureHeight * 3);
 	memset(fftw.textureData, 0, sizeof(unsigned char)
 			* fftw.textureWidth * fftw.textureHeight * 3);
+
+	/* How many hertz does one "bin" comprise? */
+	fftw.binWidth = (double)SOUND_RATE / (double)SOUND_SAMPLES_PER_TURN;
 }
 
 /* Free any FFTW resources. */
@@ -429,10 +433,14 @@ void updateDisplay(void)
 	/* Draw a textured quad. */
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0);  glVertex2f(-1, -0.5);
-	glTexCoord2f(1, 0);  glVertex2f( 1, -0.5);
-	glTexCoord2f(1, 1);  glVertex2f( 1,  1);
-	glTexCoord2f(0, 1);  glVertex2f(-1,  1);
+	/* The texture must be moved half the width of a bin to the left to
+	 * match the line spectrogram. (Yes, these "0.5"s cancel out. Let
+	 * the compiler do this. It's easier to understand this way.) */
+	double halfBin = (0.5 * fftw.binWidth) / (0.5 * SOUND_RATE);
+	glTexCoord2d(0 + halfBin, 0);  glVertex2f(-1, -0.5);
+	glTexCoord2d(1 + halfBin, 0);  glVertex2f( 1, -0.5);
+	glTexCoord2d(1 + halfBin, 1);  glVertex2f( 1,  1);
+	glTexCoord2d(0 + halfBin, 1);  glVertex2f(-1,  1);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 
@@ -566,12 +574,12 @@ void updateDisplay(void)
 		double snapX = ((double)bin / fftw.outlen) * 2 - 1;
 
 		/* SOUND_RATE and SOUND_SAMPLES_PER_TURN determine the "size" of
-		 * each "bin". Each bin has a size of some hertz. The i'th bin
-		 * corresponds to a frequency of i * <that size> Hz. Note that
-		 * the resolution is pretty low on most setups, so it doesn't
-		 * make any sense to display decimal places. */
-		int freq = (int)(((double)SOUND_RATE /
-			(double)SOUND_SAMPLES_PER_TURN) * bin);
+		 * each "bin" (see calculation of binWidth). Each bin has a size
+		 * of some hertz. The i'th bin corresponds to a frequency of i *
+		 * <that size> Hz. Note that the resolution is pretty low on
+		 * most setups, so it doesn't make any sense to display decimal
+		 * places. */
+		int freq = (int)(fftw.binWidth * bin);
 
 		/* Draw frequency -- left or right of the guide line. */
 		float coltext[3] = DISPLAY_TEXTCOLOR;
@@ -861,8 +869,17 @@ void textureInit(void)
 			fftw.textureWidth, fftw.textureHeight, 0,
 			GL_RGB, GL_UNSIGNED_BYTE, fftw.textureData);
 	checkError(__LINE__);
+
+	/* "Smooth" texture filtering. */
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	/* No texture wrapping! See display(), we have to move the texture a
+	 * little to the left. Texture wrapping would result in a wrong
+	 * spectrogram. */
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
 	glDisable(GL_TEXTURE_2D);
 }
 
