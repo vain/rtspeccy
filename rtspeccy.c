@@ -557,7 +557,7 @@ void updateDisplay(void)
 	{
 		/* Scale from [-1, 1] to [0, fftw.outlen). */
 		double t = (interaction.lastMouseDownEW[0] + 1) / 2.0;
-		int bin = (int)(t * fftw.outlen);
+		int bin = (int)round(t * fftw.outlen);
 		bin = (bin < 0 ? 0 : bin);
 		bin = (bin >= fftw.outlen ? fftw.outlen - 1 : bin);
 
