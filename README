@@ -129,7 +129,7 @@ DEPENDENCIES
 
        ·   FFTW3 (fftw)
 
-       Once those are installed, you can build pdfpres as follows:
+       Once those are installed, you can build rtspeccy as follows:
 
 
        $ cd /path/to/sources
@@ -138,10 +138,17 @@ DEPENDENCIES
        $ make
 
 
+       On Arch Linux or similar GNU distributions,  you'd  install  it
+       like this:
+
+
+       # make DESTDIR="$pkgdir" prefix=/usr install
+
+
 BUGS
-       If you find a bug, I'd happy to hear about it. Either  use  the
-       bug  tracker  at https://github.com/vain/rtspeccy or send an e-
-       mail to pcode@uninformativ.de. If that doesn't work,  then  you
+       If  you  find a bug, I'd happy to hear about it. Either use the
+       bug tracker at https://github.com/vain/rtspeccy or send  an  e-
+       mail  to  pcode@uninformativ.de. If that doesn't work, then you
        should find up to date contact information at http://uninforma‐
        tiv.de or gopher://uninformativ.de.
 
@@ -150,7 +157,7 @@ LICENSE
        panying LICENSE file.
 
 HISTORY
-       2011  –  Originally  written by Peter Hofmann (pcode@uninforma‐
+       2011 – Originally written by  Peter  Hofmann  (pcode@uninforma‐
        tiv.de).
 
 

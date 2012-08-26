@@ -132,7 +132,7 @@ Userland ALSA lib (\fBalsa-lib\fP)
 .IP \(bu 4
 FFTW3 (\fBfftw\fP)
 .P
-Once those are installed, you can build \fBpdfpres\fP as follows:
+Once those are installed, you can build \fBrtspeccy\fP as follows:
 .P
 \f(CW
 .nf
@@ -140,6 +140,14 @@ $ cd /path/to/sources
 $ cp config.h.example config.h
 $ vim config.h
 $ make
+.fi
+\fP
+.P
+On Arch Linux or similar GNU distributions, you'd install it like this:
+.P
+\f(CW
+.nf
+# make DESTDIR="$pkgdir" prefix=/usr install
 .fi
 \fP
 .SH BUGS
