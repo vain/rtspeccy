@@ -116,7 +116,7 @@ FILES
        config.h
               Configuration at compile time.
 
-DEPENDENCIES
+DEPENDENCIES AND BUILDING
        If  you  need  to  manually  compile  rtspeccy,  the  following
        libraries  and  tools  must  be  installed (in parentheses, the
        appropriate package names in Arch Linux are listed):
