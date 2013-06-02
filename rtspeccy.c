@@ -586,8 +586,9 @@ void updateDisplay(void)
 		float coltext[3] = DISPLAY_TEXTCOLOR;
 		glColor3fv(coltext);
 
-		double screenX = (interaction.lastMouseDownEW[0]
-		                  + interaction.offsetX) * interaction.scaleX;
+		double nowscale = interaction.forceOverview ? 1 : interaction.scaleX;
+		double nowoffX = interaction.forceOverview ? 0 : interaction.offsetX;
+		double screenX = (interaction.lastMouseDownEW[0] + nowoffX) * nowscale;
 
 		/* Flipping the label could be done at exactly 50% of the
 		 * screen. But we only flip it if it's some pixels away from the
@@ -611,7 +612,7 @@ void updateDisplay(void)
 		{
 			snprintf(freqstr, 256, "approx. %d Hz -> ", freq);
 			glRasterPos2d(snapX - 10 * (double)strlen(freqstr)
-			              / interaction.width / interaction.scaleX,
+			              / interaction.width / nowscale,
 			              interaction.lastMouseDownEW[1]);
 		}
 
