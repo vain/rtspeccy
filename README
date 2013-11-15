@@ -3,7 +3,7 @@ RTSPECCY(1)           Real time spectrum analyzer          RTSPECCY(1)
 
 
 NAME
-       rtspeccy - Real time spectrum analyzer (audio).
+       rtspeccy - Real time spectrum analyzer (audio)
 
 SYNOPSIS
        rtspeccy
