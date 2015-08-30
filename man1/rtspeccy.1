@@ -1,4 +1,4 @@
-.TH RTSPECCY 1 "August 2012" "rtspeccy" "Real time spectrum analyzer"
+.TH RTSPECCY 1 "2015-08-30" "rtspeccy" "Real time spectrum analyzer"
 .SH NAME
 rtspeccy \- Real time spectrum analyzer (audio)
 .SH SYNOPSIS
@@ -8,37 +8,12 @@ rtspeccy \- Real time spectrum analyzer (audio)
 and speak, \fBrtspeccy\fP shall visualize your words. \fBrtspeccy\fP is
 intended to visualize what's being \fIrecorded\fP, not what's being
 \fIplayed\fP.
-.P
-Main features:
-.IP \(bu 4
-Keep it simple. \(lqIt\(rq refers to the code. No complex configuration
-file, simply a \fIconfig.h\fP.
-.IP \(bu 4
-Uses ALSA to record sound.
-.IP \(bu 4
-Uses FFTW3 to calculate the spectrum.
-.IP \(bu 4
-Displays the spectrogram using OpenGL (glut).
-.IP \(bu 4
-Split screen: Show history as well as current spectrum.
-.IP \(bu 4
-Freeze, zooming and panning.
-.IP \(bu 4
-Overtone guidelines: Click and hold the left mouse button to show
-guidelines which indicate where over- and undertones of the current
-frequency are located.
-.IP \(bu 4
-History is colored via a color ramp. This can be set in your
-\fIconfig.h\fP.
-.IP \(bu 4
-Free software (GPL3+).
 .SH OPTIONS
 There are no command line options.
 .SH CONFIGURATION
-Most of the program's options can only be set at compile time. Have a
-look at the shipped \fIconfig.h.example\fP to see what's possible. It's
-well documented and pretty self explanatory, but you are expected to
-know a little bit of C.
+Most of the program's options can only be set at compile time. Please
+create a \fIconfig.h\fP accordingly and rebuild the program (see the
+project's \fIREADME\fP for build instructions).
 .P
 However, you can change the capture device at startup time. Set the
 environment variable $\fBRTSPECCY_CAPTURE_DEVICE\fP in order to do that.
@@ -119,37 +94,6 @@ Capture device. If unset, the value \(lqdefault\(rq is used.
 .TP
 \fIconfig.h\fP
 Configuration at compile time.
-.SH "DEPENDENCIES AND BUILDING"
-If you need to manually compile \fBrtspeccy\fP, the following libraries
-and tools must be installed (in parentheses, the appropriate package
-names in Arch Linux are listed):
-.IP \(bu 4
-make
-.IP \(bu 4
-glut (\fBfreeglut\fP) and OpenGL (\fBlibgl\fP)
-.IP \(bu 4
-Userland ALSA lib (\fBalsa-lib\fP)
-.IP \(bu 4
-FFTW3 (\fBfftw\fP)
-.P
-Once those are installed, you can build \fBrtspeccy\fP as follows:
-.P
-\f(CW
-.nf
-$ cd /path/to/sources
-$ cp config.h.example config.h
-$ vim config.h
-$ make
-.fi
-\fP
-.P
-On Arch Linux or similar GNU distributions, you'd install it like this:
-.P
-\f(CW
-.nf
-# make DESTDIR="$pkgdir" prefix=/usr install
-.fi
-\fP
 .SH BUGS
 If you find a bug, I'd happy to hear about it. Either use the bug
 tracker at \fIhttps://github.com/vain/rtspeccy\fP or send an e-mail to
