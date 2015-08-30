@@ -1,7 +1,7 @@
 EXECUTABLE = rtspeccy
 
 CFLAGS += -Wall -Wextra
-LDFLAGS += -lm -lglut -lGL -lasound -lfftw3
+LDLIBS += -lm -lglut -lGL -lasound -lfftw3
 
 INSTALL=install
 INSTALL_PROGRAM=$(INSTALL)
@@ -15,13 +15,14 @@ mandir=$(datarootdir)/man
 man1dir=$(mandir)/man1
 
 
-.PHONY: clean install installdirs
+.PHONY: all clean install installdirs
+
+all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(EXECUTABLE).c config.h
-	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(EXECUTABLE).c $(LDFLAGS)
 
 clean:
-	rm -fv $(EXECUTABLE)
+	rm -f $(EXECUTABLE)
 
 install: $(EXECUTABLE) installdirs
 	$(INSTALL_PROGRAM) $(EXECUTABLE) $(DESTDIR)$(bindir)/$(EXECUTABLE)
